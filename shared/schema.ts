@@ -143,7 +143,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   student: one(students, {
     fields: [users.id],
-    references: [users.userId],
+    references: [students.userId],
   }),
   paymentsCollected: many(payments),
   classesTeaching: many(classes),

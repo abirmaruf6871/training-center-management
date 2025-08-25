@@ -48,7 +48,7 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
-  const { data: branches } = useQuery({
+  const { data: branches = [] } = useQuery({
     queryKey: ["/api/branches"],
     enabled: isAuthenticated,
   });
@@ -141,7 +141,7 @@ export default function Dashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Branches</SelectItem>
-                    {branches?.map((branch: any) => (
+                    {branches.map((branch: any) => (
                       <SelectItem key={branch.id} value={branch.id}>
                         {branch.name}
                       </SelectItem>
@@ -160,7 +160,7 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Students</p>
                     <p className="text-3xl font-bold text-gray-900" data-testid="text-total-students">
-                      {statsLoading ? "..." : stats?.totalStudents || 0}
+                      {statsLoading ? "..." : (stats as any)?.totalStudents || 0}
                     </p>
                     <p className="text-sm text-green-600">Active enrollment</p>
                   </div>
@@ -177,7 +177,7 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Monthly Income</p>
                     <p className="text-3xl font-bold text-gray-900" data-testid="text-monthly-income">
-                      {statsLoading ? "..." : formatCurrency(stats?.monthlyIncome || 0)}
+                      {statsLoading ? "..." : formatCurrency((stats as any)?.monthlyIncome || 0)}
                     </p>
                     <p className="text-sm text-green-600">This month</p>
                   </div>
@@ -194,7 +194,7 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Pending Dues</p>
                     <p className="text-3xl font-bold text-gray-900" data-testid="text-pending-dues">
-                      {statsLoading ? "..." : formatCurrency(stats?.pendingDues || 0)}
+                      {statsLoading ? "..." : formatCurrency((stats as any)?.pendingDues || 0)}
                     </p>
                     <p className="text-sm text-red-600">Outstanding</p>
                   </div>
@@ -211,7 +211,7 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Active Courses</p>
                     <p className="text-3xl font-bold text-gray-900" data-testid="text-active-courses">
-                      {statsLoading ? "..." : stats?.activeCourses || 0}
+                      {statsLoading ? "..." : (stats as any)?.activeCourses || 0}
                     </p>
                     <p className="text-sm text-blue-600">Available programs</p>
                   </div>

@@ -43,11 +43,11 @@ export default function Students() {
     }],
   });
 
-  const { data: courses } = useQuery({
+  const { data: courses = [] } = useQuery({
     queryKey: ["/api/courses"],
   });
 
-  const { data: branches } = useQuery({
+  const { data: branches = [] } = useQuery({
     queryKey: ["/api/branches"],
   });
 
@@ -146,8 +146,8 @@ export default function Students() {
                   <StudentForm
                     onSubmit={(data) => createStudentMutation.mutate(data)}
                     isLoading={createStudentMutation.isPending}
-                    courses={courses || []}
-                    branches={branches || []}
+                    courses={courses}
+                    branches={branches}
                   />
                 </DialogContent>
               </Dialog>
@@ -174,7 +174,7 @@ export default function Students() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Courses</SelectItem>
-                    {courses?.map((course: any) => (
+                    {courses.map((course: any) => (
                       <SelectItem key={course.id} value={course.id}>
                         {course.name}
                       </SelectItem>
@@ -187,7 +187,7 @@ export default function Students() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Branches</SelectItem>
-                    {branches?.map((branch: any) => (
+                    {branches.map((branch: any) => (
                       <SelectItem key={branch.id} value={branch.id}>
                         {branch.name}
                       </SelectItem>
@@ -235,14 +235,14 @@ export default function Students() {
                           </TableCell>
                         </TableRow>
                       ))
-                    ) : students?.length === 0 ? (
+                    ) : (students as any[])?.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                           No students found matching your criteria
                         </TableCell>
                       </TableRow>
                     ) : (
-                      students?.map((student: any) => (
+                      (students as any[])?.map((student: any) => (
                         <TableRow key={student.id} className="hover:bg-gray-50" data-testid={`row-student-${student.id}`}>
                           <TableCell className="font-medium">{student.enrollmentId}</TableCell>
                           <TableCell>
@@ -258,13 +258,13 @@ export default function Students() {
                           <TableCell>{student.bmdcNo || "-"}</TableCell>
                           <TableCell>
                             {student.courseId ? (
-                              getCourseBadge(courses?.find((c: any) => c.id === student.courseId)?.name || "")
+                              getCourseBadge(courses.find((c: any) => c.id === student.courseId)?.name || "")
                             ) : (
                               "-"
                             )}
                           </TableCell>
                           <TableCell>
-                            {branches?.find((b: any) => b.id === student.branchId)?.name || "-"}
+                            {branches.find((b: any) => b.id === student.branchId)?.name || "-"}
                           </TableCell>
                           <TableCell>
                             {getPaymentStatusBadge(student.paymentStatus, student.dueAmount)}
@@ -302,11 +302,11 @@ export default function Students() {
               </div>
               
               {/* Pagination */}
-              {students && students.length > 0 && (
+              {students && (students as any[]).length > 0 && (
                 <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
                   <div className="flex items-center justify-between">
                     <div className="text-sm text-gray-700">
-                      Showing <span className="font-medium">1</span> to <span className="font-medium">{students.length}</span> of <span className="font-medium">{students.length}</span> results
+                      Showing <span className="font-medium">1</span> to <span className="font-medium">{(students as any[]).length}</span> of <span className="font-medium">{(students as any[]).length}</span> results
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button variant="outline" size="sm" disabled>Previous</Button>

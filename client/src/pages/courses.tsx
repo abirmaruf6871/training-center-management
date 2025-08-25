@@ -40,7 +40,7 @@ export default function Courses() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: courses, isLoading: coursesLoading } = useQuery({
+  const { data: courses = [], isLoading: coursesLoading } = useQuery({
     queryKey: ["/api/courses"],
   });
 
@@ -325,14 +325,14 @@ export default function Courses() {
                   </CardContent>
                 </Card>
               ))
-            ) : courses?.length === 0 ? (
+            ) : (courses as any[])?.length === 0 ? (
               <div className="col-span-full text-center py-12">
                 <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No courses yet</h3>
                 <p className="text-gray-500">Get started by creating your first course.</p>
               </div>
             ) : (
-              courses?.map((course: any) => (
+              (courses as any[])?.map((course: any) => (
                 <Card key={course.id} className="hover:shadow-md transition-shadow" data-testid={`card-course-${course.id}`}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -420,7 +420,7 @@ export default function Courses() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {courses?.map((course: any) => (
+                    {(courses as any[])?.map((course: any) => (
                       <TableRow key={course.id} className="hover:bg-gray-50" data-testid={`row-course-${course.id}`}>
                         <TableCell>
                           <div>

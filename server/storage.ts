@@ -147,10 +147,10 @@ export class DatabaseStorage implements IStorage {
     branchId?: string;
     paymentStatus?: string;
   }): Promise<Student[]> {
-    let query = db.select().from(students).where(eq(students.isActive, true));
+    const conditions = [eq(students.isActive, true)];
 
     if (filters?.search) {
-      query = query.where(
+      conditions.push(
         or(
           ilike(students.name, `%${filters.search}%`),
           ilike(students.enrollmentId, `%${filters.search}%`),
@@ -160,18 +160,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (filters?.courseId) {
-      query = query.where(eq(students.courseId, filters.courseId));
+      conditions.push(eq(students.courseId, filters.courseId));
     }
 
     if (filters?.branchId) {
-      query = query.where(eq(students.branchId, filters.branchId));
+      conditions.push(eq(students.branchId, filters.branchId));
     }
 
     if (filters?.paymentStatus) {
-      query = query.where(eq(students.paymentStatus, filters.paymentStatus));
+      conditions.push(eq(students.paymentStatus, filters.paymentStatus));
     }
 
-    return await query.orderBy(desc(students.createdAt));
+    return await db
+      .select()
+      .from(students)
+      .where(and(...conditions))
+      .orderBy(desc(students.createdAt));
   }
 
   async getStudent(id: string): Promise<Student | undefined> {
@@ -222,13 +226,18 @@ export class DatabaseStorage implements IStorage {
 
   // Payment operations
   async getPayments(studentId?: string): Promise<Payment[]> {
-    let query = db.select().from(payments);
-
     if (studentId) {
-      query = query.where(eq(payments.studentId, studentId));
+      return await db
+        .select()
+        .from(payments)
+        .where(eq(payments.studentId, studentId))
+        .orderBy(desc(payments.paymentDate));
     }
 
-    return await query.orderBy(desc(payments.paymentDate));
+    return await db
+      .select()
+      .from(payments)
+      .orderBy(desc(payments.paymentDate));
   }
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
@@ -238,7 +247,7 @@ export class DatabaseStorage implements IStorage {
     if (payment.studentId) {
       const student = await this.getStudent(payment.studentId);
       if (student) {
-        const newPaidAmount = parseFloat(student.paidAmount) + parseFloat(payment.amount);
+        const newPaidAmount = parseFloat(student.paidAmount || "0") + parseFloat(payment.amount.toString());
         const newDueAmount = parseFloat(student.totalFee) - newPaidAmount;
         
         let paymentStatus = "pending";
@@ -278,21 +287,32 @@ export class DatabaseStorage implements IStorage {
     courseId?: string;
     facultyId?: string;
   }): Promise<Class[]> {
-    let query = db.select().from(classes);
+    const conditions = [];
 
     if (filters?.branchId) {
-      query = query.where(eq(classes.branchId, filters.branchId));
+      conditions.push(eq(classes.branchId, filters.branchId));
     }
 
     if (filters?.courseId) {
-      query = query.where(eq(classes.courseId, filters.courseId));
+      conditions.push(eq(classes.courseId, filters.courseId));
     }
 
     if (filters?.facultyId) {
-      query = query.where(eq(classes.facultyId, filters.facultyId));
+      conditions.push(eq(classes.facultyId, filters.facultyId));
     }
 
-    return await query.orderBy(desc(classes.classDate));
+    if (conditions.length > 0) {
+      return await db
+        .select()
+        .from(classes)
+        .where(and(...conditions))
+        .orderBy(desc(classes.classDate));
+    }
+
+    return await db
+      .select()
+      .from(classes)
+      .orderBy(desc(classes.classDate));
   }
 
   async createClass(classData: InsertClass): Promise<Class> {
@@ -330,8 +350,6 @@ export class DatabaseStorage implements IStorage {
     startDate?: Date;
     endDate?: Date;
   }): Promise<Expense[]> {
-    let query = db.select().from(expenses);
-
     const conditions = [];
 
     if (filters?.branchId) {
@@ -351,10 +369,17 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      return await db
+        .select()
+        .from(expenses)
+        .where(and(...conditions))
+        .orderBy(desc(expenses.expenseDate));
     }
 
-    return await query.orderBy(desc(expenses.expenseDate));
+    return await db
+      .select()
+      .from(expenses)
+      .orderBy(desc(expenses.expenseDate));
   }
 
   async createExpense(expense: InsertExpense): Promise<Expense> {
@@ -370,16 +395,15 @@ export class DatabaseStorage implements IStorage {
     activeCourses: number;
   }> {
     // Total students
-    let studentQuery = db
-      .select({ count: sql<number>`count(*)` })
-      .from(students)
-      .where(eq(students.isActive, true));
-
+    const studentConditions = [eq(students.isActive, true)];
     if (branchId) {
-      studentQuery = studentQuery.where(eq(students.branchId, branchId));
+      studentConditions.push(eq(students.branchId, branchId));
     }
 
-    const [totalStudentsResult] = await studentQuery;
+    const [totalStudentsResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(students)
+      .where(and(...studentConditions));
 
     // Monthly income (current month)
     const startOfMonth = new Date();
@@ -391,18 +415,11 @@ export class DatabaseStorage implements IStorage {
     endOfMonth.setDate(0);
     endOfMonth.setHours(23, 59, 59, 999);
 
-    let incomeQuery = db
-      .select({ sum: sql<number>`COALESCE(SUM(${payments.amount}), 0)` })
-      .from(payments)
-      .where(
-        and(
-          sql`${payments.paymentDate} >= ${startOfMonth}`,
-          sql`${payments.paymentDate} <= ${endOfMonth}`
-        )
-      );
-
+    let monthlyIncomeResult;
     if (branchId) {
-      incomeQuery = incomeQuery
+      [monthlyIncomeResult] = await db
+        .select({ sum: sql<number>`COALESCE(SUM(${payments.amount}), 0)` })
+        .from(payments)
         .leftJoin(students, eq(payments.studentId, students.id))
         .where(
           and(
@@ -411,26 +428,31 @@ export class DatabaseStorage implements IStorage {
             eq(students.branchId, branchId)
           )
         );
+    } else {
+      [monthlyIncomeResult] = await db
+        .select({ sum: sql<number>`COALESCE(SUM(${payments.amount}), 0)` })
+        .from(payments)
+        .where(
+          and(
+            sql`${payments.paymentDate} >= ${startOfMonth}`,
+            sql`${payments.paymentDate} <= ${endOfMonth}`
+          )
+        );
     }
-
-    const [monthlyIncomeResult] = await incomeQuery;
 
     // Pending dues
-    let duesQuery = db
-      .select({ sum: sql<number>`COALESCE(SUM(${students.dueAmount}), 0)` })
-      .from(students)
-      .where(
-        and(
-          eq(students.isActive, true),
-          sql`${students.dueAmount} > 0`
-        )
-      );
-
+    const duesConditions = [
+      eq(students.isActive, true),
+      sql`${students.dueAmount} > 0`
+    ];
     if (branchId) {
-      duesQuery = duesQuery.where(eq(students.branchId, branchId));
+      duesConditions.push(eq(students.branchId, branchId));
     }
 
-    const [pendingDuesResult] = await duesQuery;
+    const [pendingDuesResult] = await db
+      .select({ sum: sql<number>`COALESCE(SUM(${students.dueAmount}), 0)` })
+      .from(students)
+      .where(and(...duesConditions));
 
     // Active courses
     const [activeCoursesResult] = await db
