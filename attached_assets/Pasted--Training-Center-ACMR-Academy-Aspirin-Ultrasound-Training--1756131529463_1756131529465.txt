@@ -1,0 +1,233 @@
+অসাধারণ 👌 ডাক্তার!
+এখন আমি আপনার জন্য Training Center (ACMR Academy + Aspirin Ultrasound Training Center) এর সফটওয়্যারটাকে *আরও elaborate আকারে* লিখে দিলাম।
+
+---
+
+# 🏫 *Training Center Management & Accounts Software – Full Detailed Specification*
+
+---
+
+## 🔹 1. *User & Role Management*
+
+👉 Multi-user, multi-level access থাকবে
+
+* *Admin (Founder/Director)*
+
+  * সব মডিউল কন্ট্রোল করবে
+  * নতুন ইউজার তৈরি, রিপোর্ট এক্সপোর্ট, Profit/Loss রিপোর্ট দেখতে পারবে
+
+* *Manager/Branch Admin*
+
+  * শুধু নির্দিষ্ট ব্রাঞ্চের Student, Course, Accounts দেখতে পারবে
+
+* *Accountant*
+
+  * Fee collection, Expense entry, Invoice জেনারেট করতে পারবে
+
+* *Faculty/Teacher*
+
+  * Assigned batch/class দেখতে পারবে
+  * Attendance/Exam result এন্ট্রি করতে পারবে
+
+* *Student (Portal Access)*
+
+  * Payment status, Class schedule, Study materials, Exam result দেখতে পারবে
+
+---
+
+## 🔹 2. *Course Management*
+
+* প্রতিটি কোর্স Create/Edit হবে:
+
+  * Course Name (CMU, DMU, ARDMS ইত্যাদি)
+  * Duration (1 month / 6 month / 1 year)
+  * Fee (Installment option সহ)
+  * Batch Size limit
+  * Branch allocation
+
+* *Course Fee Structure*
+
+  * Admission Fee
+  * Installment Plans
+  * Optional Discounts / Scholarship
+
+* *Reports*
+
+  * Course-wise total students
+  * Course-wise total income
+  * Course-wise pending dues
+
+---
+
+## 🔹 3. *Student Admission & Database*
+
+* *Student Profile*:
+
+  * Name, BMDC Reg no., Contact info, Branch, Batch, Admission Date
+  * Documents upload option (BMDC certificate, NID ইত্যাদি)
+
+* *Unique Enrollment ID* auto generate হবে
+
+* *Database Search/Filter Options*:
+
+  * Name, BMDC no., Batch, Branch, Course
+
+* *Export*: Excel / PDF
+
+---
+
+## 🔹 4. *Fee Collection & Accounts*
+
+* প্রতিটি Student এর *Payment Ledger* থাকবে
+
+  * Admission Fee
+  * Installment payments (date-wise entry)
+  * Due status clear indication
+
+* *Payment Method*: Cash, bKash, Nagad, Bank transfer
+
+* *Automation*:
+
+  * Invoice generate (PDF/Print option)
+  * Due payment reminder (SMS/Email/WhatsApp)
+  * Automated receipt after payment
+
+* *Reports*
+
+  * Daily collection report
+  * Branch-wise income
+  * Student-wise dues list
+  * Bank/Cashbook statement
+
+---
+
+## 🔹 5. *Class & Attendance Management*
+
+* *Class Scheduling*:
+
+  * Batch-wise timetable
+  * Teacher assignment
+  * Auto reminder (SMS/Email) to students
+
+* *Attendance System*:
+
+  * Manual marking (Present/Absent)
+  * QR Code / Barcode optional integration
+  * Attendance Report:
+
+    * Student wise % attendance
+    * Batch-wise total attendance
+
+---
+
+## 🔹 6. *Study Materials & Exam*
+
+* *Materials Upload*:
+
+  * PDF lecture sheets
+  * PowerPoint slides
+  * Recorded class videos (link)
+
+* *Exam Management*:
+
+  * Online Quiz (MCQ)
+  * Offline Exam Marks entry
+  * Auto-generated Result Sheet
+
+* *Progress Report*:
+
+  * Student wise performance chart
+  * Batch average result
+
+---
+
+## 🔹 7. *Expense Management*
+
+* Expense entry fields:
+
+  * Salary, Rent, Utility, Marketing, Stationery, Faculty honorarium
+
+* *Recurring Expenses*:
+
+  * প্রতি মাসে fixed expense auto-entry
+
+* *Faculty Honorarium*:
+
+  * প্রতি class/hour payment হিসাব হবে
+  * Faculty payment summary auto-generate
+
+---
+
+## 🔹 8. *Multi-Branch Support*
+
+* Dhaka, Mymensingh, Kishoreganj branch আলাদা ভাবে ডাটা এন্ট্রি হবে
+* Central Admin সব দেখতে পারবে (Dashboard → All branches overview)
+* *Branch Wise Report*:
+
+  * Income
+  * Expense
+  * Profit/Loss
+  * Student Admission count
+
+---
+
+## 🔹 9. *Reports & Analytics*
+
+* *Financial Reports*:
+
+  * Daily cashbook
+  * Income vs Expense statement
+  * Profit/Loss (Overall + Branch-wise + Course-wise)
+
+* *Academic Reports*:
+
+  * Course-wise enrollment trend (Graph)
+  * Batch attendance report
+  * Exam performance statistics
+
+* *Outstanding Report*
+
+  * Dues list (Student-wise + Batch-wise)
+
+---
+
+## 🔹 10. *Notifications & Automation*
+
+* SMS/Email automation:
+
+  * Payment Due Reminder
+  * Class Reminder
+  * Exam Notice
+  * Batch Starting Announcement
+
+* WhatsApp integration optional
+
+---
+
+## 🔹 11. *Security & Backup*
+
+* *Login Security*: Role-based access control
+* *Data Security*: Encryption of sensitive student & financial data
+* *Backup*: Auto daily backup to Cloud (Google Drive / Dropbox)
+* *Export*: Data export to Excel/PDF anytime
+
+---
+
+## 🔹 12. *Extra (Optional but Powerful Features)*
+
+* *Student Portal (Web/Mobile)* → Payment, Class, Materials, Results
+* *Faculty Portal* → Assigned classes, honorarium statement
+* *E-Payment Integration* → bKash/Nagad Payment Gateway
+* *Mobile App* → For students & teachers (future expansion)
+
+---
+
+# 🖥️ Example Dashboard Layout
+
+*Admin Dashboard:*
+
+* Total Students Today / This Month
+* Total Income / Expense / Profit (Branch wise)
+* Upcoming Classes & Exams
+* Dues List Summary
+* Graphs: Admission Trend, Income vs Expense

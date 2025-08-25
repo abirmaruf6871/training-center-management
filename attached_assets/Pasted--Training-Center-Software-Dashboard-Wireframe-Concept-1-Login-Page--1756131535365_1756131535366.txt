@@ -1,0 +1,173 @@
+# 🖥️ *Training Center Software – Dashboard Wireframe (Concept)*
+
+---
+
+## 1️⃣ *Login Page*
+
+* Fields: Username, Password
+* Buttons: Login, Forgot Password
+* Role-based login redirect (Admin / Accountant / Faculty / Student)
+* Minimalist, clean layout
+
+---
+
+## 2️⃣ *Admin Dashboard (After Login)*
+
+*Top Navigation Bar*
+
+* Logo / App Name
+* User Profile & Logout
+* Notifications (Payment Due / Class Reminder)
+
+*Side Menu (Left)*
+
+* Dashboard (Overview)
+* Students → Admission, List, Dues
+* Courses → Create/Edit, Batch List
+* Faculty → List, Assign Batches
+* Classes → Schedule, Attendance
+* Payments → Received, Pending
+* Expenses → Add/View Reports
+* Reports → Income, Profit/Loss, Attendance, Exam
+* Settings → Users, Roles, Branches, Backup
+
+*Main Panel (Widgets / Cards)*
+
+* *Total Students (Today / This Month)*
+* *Total Income / Expense / Profit (Graph)*
+* *Upcoming Classes*
+* *Pending Payments / Dues*
+* *Batch-wise Student Count (Graph)*
+* Quick Action Buttons: Add Student, Add Course, Collect Payment
+
+---
+
+## 3️⃣ *Student Module Wireframe*
+
+*Student List View*
+
+* Search: Name / BMDC No / Batch
+* Columns: ID, Name, Course, Batch, Branch, Fee Status, Contact
+* Action Buttons: View, Edit, Collect Payment, Send Reminder
+
+*Student Profile Page*
+
+* Personal Info: Name, Contact, BMDC No, Admission Date
+* Payment History: Installments Paid, Due Amount
+* Attendance: Graph / Table
+* Exam Result: Marks / Progress Graph
+* Materials Download: PDFs / Videos
+
+---
+
+## 4️⃣ *Course & Batch Module*
+
+*Course List Page*
+
+* Columns: Course Name, Duration, Fee, Active Batches
+* Action Buttons: View, Edit, Add Batch
+
+*Batch Detail Page*
+
+* Batch Info: Start / End Date, Branch, Faculty
+* Student List: Enrolled Students
+* Attendance & Exam links
+* Batch-wise income & dues
+
+---
+
+## 5️⃣ *Fee Collection Module*
+
+*Payment Page*
+
+* Student Search → Select Student
+* Display: Total Fee, Paid, Due
+* Input: Payment Amount, Method (Cash/bKash/Bank), Date
+* Generate Receipt → Print/PDF
+* Option: Auto SMS/Email notification
+
+---
+
+## 6️⃣ *Class & Attendance Module*
+
+*Class Schedule Page*
+
+* Batch-wise Calendar View
+* Upcoming Classes Highlighted
+* Assign Faculty
+* Mark Attendance → Present/Absent (Manual / QR code)
+
+*Attendance Report*
+
+* Student wise %
+* Batch wise summary graph
+
+---
+
+## 7️⃣ *Expense Module*
+
+*Expense List Page*
+
+* Columns: Date, Category (Salary/Rent/Marketing), Amount, Branch
+* Action: Edit / Delete
+* Add New Expense → Form (Category, Amount, Date, Branch)
+
+*Expense Report Page*
+
+* Filter: Date / Category / Branch
+* Graphs: Monthly/Quarterly Expense Trend
+
+---
+
+## 8️⃣ *Reports & Analytics Page*
+
+*Overview Widgets*
+
+* Total Income vs Expense (Graph)
+* Course-wise Revenue
+* Student Admission Trend (Graph)
+* Pending Dues List
+* Faculty Honorarium Summary
+
+*Export Options*
+
+* PDF / Excel / CSV
+
+---
+
+## 9️⃣ *Notifications & Automation*
+
+*Notification Center*
+
+* Payment Due Reminder
+* Upcoming Class Reminder
+* Exam Notification
+
+*Option*: Auto SMS / Email / WhatsApp Integration
+
+---
+
+## 10️⃣ *Mobile Friendly / Student Portal Wireframe*
+
+*Student Login* → Dashboard
+
+* Upcoming Classes
+* Fee Status & Payment Link
+* Materials Download
+* Exam Result / Progress
+* Notifications
+
+*Faculty Mobile Portal*
+
+* Assigned Batches
+* Mark Attendance
+* Add Exam Marks
+* View Honorarium
+
+---
+
+💡 *Design Notes:*
+
+* Color coding: Green → Paid, Red → Due, Blue → Info
+* Charts/Graphs: Bar charts for Income, Line charts for Admission Trend
+* Clean, Minimalist UI → Less clutter, fast navigation
