@@ -150,13 +150,14 @@ export class DatabaseStorage implements IStorage {
     const conditions = [eq(students.isActive, true)];
 
     if (filters?.search) {
-      conditions.push(
-        or(
-          ilike(students.name, `%${filters.search}%`),
-          ilike(students.enrollmentId, `%${filters.search}%`),
-          ilike(students.bmdcNo, `%${filters.search}%`)
-        )
+      const searchCondition = or(
+        ilike(students.name, `%${filters.search}%`),
+        ilike(students.enrollmentId, `%${filters.search}%`),
+        ilike(students.bmdcNo, `%${filters.search}%`)
       );
+      if (searchCondition) {
+        conditions.push(searchCondition);
+      }
     }
 
     if (filters?.courseId) {

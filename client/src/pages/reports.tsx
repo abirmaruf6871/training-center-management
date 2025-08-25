@@ -19,7 +19,7 @@ export default function Reports() {
   const [dateRange, setDateRange] = useState("this_month");
   const [selectedBranch, setSelectedBranch] = useState("");
 
-  const { data: branches } = useQuery({
+  const { data: branches } = useQuery<any[]>({
     queryKey: ["/api/branches"],
   });
 

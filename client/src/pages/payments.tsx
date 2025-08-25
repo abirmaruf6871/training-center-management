@@ -31,11 +31,11 @@ export default function Payments() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: payments, isLoading: paymentsLoading } = useQuery({
+  const { data: payments, isLoading: paymentsLoading } = useQuery<any[]>({
     queryKey: ["/api/payments"],
   });
 
-  const { data: students } = useQuery({
+  const { data: students } = useQuery<any[]>({
     queryKey: ["/api/students"],
   });
 
@@ -111,16 +111,16 @@ export default function Payments() {
   };
 
   const getStudentName = (studentId: string) => {
-    const student = students?.find((s: any) => s.id === studentId);
+    const student = Array.isArray(students) ? students.find((s: any) => s.id === studentId) : null;
     return student ? student.name : "Unknown Student";
   };
 
   const getStudentEnrollmentId = (studentId: string) => {
-    const student = students?.find((s: any) => s.id === studentId);
+    const student = Array.isArray(students) ? students.find((s: any) => s.id === studentId) : null;
     return student ? student.enrollmentId : "";
   };
 
-  const filteredPayments = payments?.filter((payment: any) => {
+  const filteredPayments = Array.isArray(payments) ? payments.filter((payment: any) => {
     const studentName = getStudentName(payment.studentId).toLowerCase();
     const enrollmentId = getStudentEnrollmentId(payment.studentId).toLowerCase();
     const search = searchTerm.toLowerCase();
@@ -128,7 +128,7 @@ export default function Payments() {
     return studentName.includes(search) || 
            enrollmentId.includes(search) ||
            payment.transactionId?.toLowerCase().includes(search);
-  });
+  }) : [];
 
   return (
     <div className="min-h-screen bg-slate-50">

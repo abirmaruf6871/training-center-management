@@ -48,7 +48,7 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
-  const { data: branches = [] } = useQuery({
+  const { data: branches = [] } = useQuery<any[]>({
     queryKey: ["/api/branches"],
     enabled: isAuthenticated,
   });
@@ -141,7 +141,7 @@ export default function Dashboard() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Branches</SelectItem>
-                    {branches.map((branch: any) => (
+                    {Array.isArray(branches) && branches.map((branch: any) => (
                       <SelectItem key={branch.id} value={branch.id}>
                         {branch.name}
                       </SelectItem>

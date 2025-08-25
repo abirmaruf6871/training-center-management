@@ -77,7 +77,7 @@ export default function PaymentForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Select Student</FormLabel>
-              <Select onValueChange={handleStudentSelect} value={field.value}>
+              <Select onValueChange={handleStudentSelect} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger data-testid="select-student">
                     <SelectValue placeholder="Choose student to collect payment from" />
@@ -156,7 +156,7 @@ export default function PaymentForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Payment Method</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger data-testid="select-payment-method">
                       <SelectValue placeholder="Select payment method" />
@@ -182,7 +182,7 @@ export default function PaymentForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Payment Type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger data-testid="select-payment-type">
                       <SelectValue />
@@ -208,6 +208,7 @@ export default function PaymentForm({
                   <Input 
                     placeholder="For digital payments"
                     {...field}
+                    value={field.value || ""}
                     data-testid="input-transaction-id"
                   />
                 </FormControl>
@@ -227,6 +228,7 @@ export default function PaymentForm({
                 <Textarea 
                   placeholder="Any additional notes about the payment..."
                   {...field}
+                  value={field.value || ""}
                   data-testid="input-payment-notes"
                 />
               </FormControl>

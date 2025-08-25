@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 export default function TopNav() {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: any };
 
   const handleLogout = () => {
     window.location.href = "/api/logout";

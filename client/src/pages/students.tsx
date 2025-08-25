@@ -34,7 +34,7 @@ export default function Students() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: students, isLoading: studentsLoading } = useQuery({
+  const { data: students, isLoading: studentsLoading } = useQuery<any[]>({
     queryKey: ["/api/students", { 
       search: searchTerm, 
       courseId: selectedCourse, 
@@ -43,11 +43,11 @@ export default function Students() {
     }],
   });
 
-  const { data: courses = [] } = useQuery({
+  const { data: courses = [] } = useQuery<any[]>({
     queryKey: ["/api/courses"],
   });
 
-  const { data: branches = [] } = useQuery({
+  const { data: branches = [] } = useQuery<any[]>({
     queryKey: ["/api/branches"],
   });
 
@@ -146,8 +146,8 @@ export default function Students() {
                   <StudentForm
                     onSubmit={(data) => createStudentMutation.mutate(data)}
                     isLoading={createStudentMutation.isPending}
-                    courses={courses}
-                    branches={branches}
+                    courses={Array.isArray(courses) ? courses : []}
+                    branches={Array.isArray(branches) ? branches : []}
                   />
                 </DialogContent>
               </Dialog>
@@ -174,7 +174,7 @@ export default function Students() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Courses</SelectItem>
-                    {courses.map((course: any) => (
+                    {Array.isArray(courses) && courses.map((course: any) => (
                       <SelectItem key={course.id} value={course.id}>
                         {course.name}
                       </SelectItem>
@@ -187,7 +187,7 @@ export default function Students() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Branches</SelectItem>
-                    {branches.map((branch: any) => (
+                    {Array.isArray(branches) && branches.map((branch: any) => (
                       <SelectItem key={branch.id} value={branch.id}>
                         {branch.name}
                       </SelectItem>

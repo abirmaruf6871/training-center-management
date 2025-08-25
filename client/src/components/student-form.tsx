@@ -82,7 +82,7 @@ export default function StudentForm({
               <FormItem>
                 <FormLabel>BMDC Registration No.</FormLabel>
                 <FormControl>
-                  <Input placeholder="B-12345" {...field} data-testid="input-bmdc-no" />
+                  <Input placeholder="B-12345" {...field} value={field.value || ""} data-testid="input-bmdc-no" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -98,7 +98,7 @@ export default function StudentForm({
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="doctor@example.com" {...field} data-testid="input-email" />
+                  <Input type="email" placeholder="doctor@example.com" {...field} value={field.value || ""} data-testid="input-email" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -112,7 +112,7 @@ export default function StudentForm({
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input placeholder="+880 123 456 7890" {...field} data-testid="input-phone" />
+                  <Input placeholder="+880 123 456 7890" {...field} value={field.value || ""} data-testid="input-phone" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -127,7 +127,7 @@ export default function StudentForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger data-testid="select-course">
                       <SelectValue placeholder="Select course" />
@@ -152,7 +152,7 @@ export default function StudentForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Branch</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger data-testid="select-branch">
                       <SelectValue placeholder="Select branch" />
@@ -178,7 +178,7 @@ export default function StudentForm({
               <FormItem>
                 <FormLabel>Batch Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Batch 15" {...field} data-testid="input-batch-name" />
+                  <Input placeholder="Batch 15" {...field} value={field.value || ""} data-testid="input-batch-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>

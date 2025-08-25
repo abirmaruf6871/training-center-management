@@ -40,7 +40,7 @@ export default function Courses() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: courses = [], isLoading: coursesLoading } = useQuery({
+  const { data: courses = [], isLoading: coursesLoading } = useQuery<any[]>({
     queryKey: ["/api/courses"],
   });
 
@@ -219,6 +219,7 @@ export default function Courses() {
                               <Textarea 
                                 placeholder="Course description..."
                                 {...field}
+                                value={field.value || ""}
                                 data-testid="input-description"
                               />
                             </FormControl>
@@ -274,6 +275,7 @@ export default function Courses() {
                                 <Input 
                                   type="number" 
                                   {...field}
+                                  value={field.value || ""}
                                   onChange={(e) => field.onChange(parseInt(e.target.value))}
                                   data-testid="input-installment-count"
                                 />
