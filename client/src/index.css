@@ -1,0 +1,292 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(210 25% 7.8431%);
+  --card: hsl(180 6.6667% 97.0588%);
+  --card-foreground: hsl(210 25% 7.8431%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(210 25% 7.8431%);
+  --primary: hsl(220 93% 57%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 25% 7.8431%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 1.9608% 90%);
+  --muted-foreground: hsl(210 25% 7.8431%);
+  --accent: hsl(220 15% 95%);
+  --accent-foreground: hsl(220 93% 57%);
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(220 13% 91%);
+  --input: hsl(220 13% 97%);
+  --ring: hsl(220 93% 57%);
+  --chart-1: hsl(220 93% 57%);
+  --chart-2: hsl(159.7826 100% 36.0784%);
+  --chart-3: hsl(42.0290 92.8251% 56.2745%);
+  --chart-4: hsl(147.1429 78.5047% 41.9608%);
+  --chart-5: hsl(341.4894 75.2000% 50.9804%);
+  --sidebar: hsl(180 6.6667% 97.0588%);
+  --sidebar-foreground: hsl(210 25% 7.8431%);
+  --sidebar-primary: hsl(220 93% 57%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(220 15% 95%);
+  --sidebar-accent-foreground: hsl(220 93% 57%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: hsl(220 93% 57%);
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'Fira Code', monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(220 43% 11% / 0.05);
+  --shadow-xs: 0px 1px 2px 0px hsl(220 43% 11% / 0.05);
+  --shadow-sm: 0px 1px 2px 0px hsl(220 43% 11% / 0.05), 0px 1px 3px 0px hsl(220 43% 11% / 0.10);
+  --shadow: 0px 1px 2px 0px hsl(220 43% 11% / 0.05), 0px 2px 4px 0px hsl(220 43% 11% / 0.10);
+  --shadow-md: 0px 2px 4px -1px hsl(220 43% 11% / 0.10), 0px 4px 8px -2px hsl(220 43% 11% / 0.10);
+  --shadow-lg: 0px 4px 6px -2px hsl(220 43% 11% / 0.10), 0px 8px 16px -4px hsl(220 43% 11% / 0.10);
+  --shadow-xl: 0px 8px 16px -4px hsl(220 43% 11% / 0.10), 0px 16px 32px -8px hsl(220 43% 11% / 0.10);
+  --shadow-2xl: 0px 16px 32px -8px hsl(220 43% 11% / 0.10);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+}
+
+.dark {
+  --background: hsl(220 27% 8%);
+  --foreground: hsl(220 9% 90%);
+  --card: hsl(220 27% 10%);
+  --card-foreground: hsl(220 9% 90%);
+  --popover: hsl(220 27% 8%);
+  --popover-foreground: hsl(220 9% 90%);
+  --primary: hsl(220 93% 57%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(220 9% 90%);
+  --secondary-foreground: hsl(220 27% 8%);
+  --muted: hsl(220 27% 15%);
+  --muted-foreground: hsl(220 9% 65%);
+  --accent: hsl(220 27% 15%);
+  --accent-foreground: hsl(220 93% 57%);
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(220 27% 18%);
+  --input: hsl(220 27% 18%);
+  --ring: hsl(220 93% 57%);
+  --chart-1: hsl(220 93% 57%);
+  --chart-2: hsl(159.7826 100% 36.0784%);
+  --chart-3: hsl(42.0290 92.8251% 56.2745%);
+  --chart-4: hsl(147.1429 78.5047% 41.9608%);
+  --chart-5: hsl(341.4894 75.2000% 50.9804%);
+  --sidebar: hsl(220 27% 10%);
+  --sidebar-foreground: hsl(220 9% 90%);
+  --sidebar-primary: hsl(220 93% 57%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(220 27% 15%);
+  --sidebar-accent-foreground: hsl(220 93% 57%);
+  --sidebar-border: hsl(220 27% 18%);
+  --sidebar-ring: hsl(220 93% 57%);
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: 'Fira Code', monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0px 1px 2px 0px hsl(220 43% 11% / 0.20);
+  --shadow-xs: 0px 1px 2px 0px hsl(220 43% 11% / 0.20);
+  --shadow-sm: 0px 1px 2px 0px hsl(220 43% 11% / 0.20), 0px 1px 3px 0px hsl(220 43% 11% / 0.25);
+  --shadow: 0px 1px 2px 0px hsl(220 43% 11% / 0.20), 0px 2px 4px 0px hsl(220 43% 11% / 0.25);
+  --shadow-md: 0px 2px 4px -1px hsl(220 43% 11% / 0.25), 0px 4px 8px -2px hsl(220 43% 11% / 0.25);
+  --shadow-lg: 0px 4px 6px -2px hsl(220 43% 11% / 0.25), 0px 8px 16px -4px hsl(220 43% 11% / 0.25);
+  --shadow-xl: 0px 8px 16px -4px hsl(220 43% 11% / 0.25), 0px 16px 32px -8px hsl(220 43% 11% / 0.25);
+  --shadow-2xl: 0px 16px 32px -8px hsl(220 43% 11% / 0.25);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  /* Custom color utilities for ACMR Academy branding */
+  .bg-acmr-primary {
+    @apply bg-blue-700;
+  }
+  
+  .bg-acmr-primary-hover {
+    @apply bg-blue-800;
+  }
+  
+  .text-acmr-primary {
+    @apply text-blue-700;
+  }
+  
+  .border-acmr-primary {
+    @apply border-blue-700;
+  }
+  
+  /* Payment status colors */
+  .bg-status-paid {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .bg-status-due {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  .bg-status-partial {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .bg-status-info {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  /* Course badge colors */
+  .bg-course-dmu {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  .bg-course-cmu {
+    @apply bg-purple-100 text-purple-800;
+  }
+  
+  .bg-course-ardms {
+    @apply bg-green-100 text-green-800;
+  }
+
+  /* Payment method colors */
+  .bg-payment-bkash {
+    @apply bg-pink-100 text-pink-800;
+  }
+  
+  .bg-payment-nagad {
+    @apply bg-orange-100 text-orange-800;
+  }
+  
+  .bg-payment-cash {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .bg-payment-bank {
+    @apply bg-blue-100 text-blue-800;
+  }
+
+  /* Medical training specific gradients */
+  .bg-gradient-medical {
+    background: linear-gradient(135deg, hsl(220 93% 57%) 0%, hsl(220 83% 47%) 100%);
+  }
+  
+  .bg-gradient-success {
+    background: linear-gradient(135deg, hsl(147 78% 42%) 0%, hsl(147 68% 32%) 100%);
+  }
+  
+  .bg-gradient-warning {
+    background: linear-gradient(135deg, hsl(42 93% 56%) 0%, hsl(42 83% 46%) 100%);
+  }
+  
+  .bg-gradient-danger {
+    background: linear-gradient(135deg, hsl(356 91% 54%) 0%, hsl(356 81% 44%) 100%);
+  }
+
+  /* Enhanced shadows for cards */
+  .shadow-card {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+  
+  .shadow-card-hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Custom scrollbar for sidebar */
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: hsl(220 13% 91%);
+    border-radius: 3px;
+  }
+  
+  .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: hsl(220 13% 80%);
+  }
+
+  /* Medical-specific typography */
+  .text-medical-heading {
+    @apply text-2xl font-bold text-gray-900;
+  }
+  
+  .text-medical-subheading {
+    @apply text-lg font-semibold text-gray-800;
+  }
+  
+  .text-medical-body {
+    @apply text-base text-gray-600;
+  }
+  
+  .text-medical-caption {
+    @apply text-sm text-gray-500;
+  }
+
+  /* Interactive states for medical UI */
+  .btn-medical-primary {
+    @apply bg-blue-700 hover:bg-blue-800 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-medical-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+  
+  .btn-medical-success {
+    @apply bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200;
+  }
+
+  /* Card hover effects for dashboards */
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md;
+  }
+
+  /* Status indicators */
+  .status-indicator {
+    @apply w-2 h-2 rounded-full inline-block mr-2;
+  }
+  
+  .status-paid {
+    @apply bg-green-500;
+  }
+  
+  .status-due {
+    @apply bg-red-500;
+  }
+  
+  .status-partial {
+    @apply bg-yellow-500;
+  }
+  
+  .status-active {
+    @apply bg-blue-500;
+  }
+
+  /* Table enhancements for medical data */
+  .table-medical th {
+    @apply bg-gray-50 text-left py-3 px-4 font-medium text-gray-900 border-b border-gray-200;
+  }
+  
+  .table-medical td {
+    @apply py-3 px-4 border-b border-gray-100;
+  }
+  
+  .table-medical tbody tr:hover {
+    @apply bg-gray-50;
+  }
+
+  /* Custom focus states for accessibility */
+  .focus-medical {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+}
