@@ -11,17 +11,20 @@ import {
   insertExpenseSchema
 } from "@shared/schema";
 import { z } from "zod";
+import courseRoutes from "./routes/courses";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Course routes
+  app.use('/api/courses', courseRoutes);
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
+      // For local auth, return the user directly from session
+      res.json(req.user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
@@ -41,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/branches", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (!user || (user.role !== "admin" && user.role !== "manager")) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
@@ -68,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/courses", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (!user || (user.role !== "admin" && user.role !== "manager")) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
@@ -84,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/courses/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const user = await storage.getUser(req.user.claims.sub);
+      const user = req.user;
       if (!user || (user.role !== "admin" && user.role !== "manager")) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }

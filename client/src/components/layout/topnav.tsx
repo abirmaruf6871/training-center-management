@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,10 +10,22 @@ import {
 } from "lucide-react";
 
 export default function TopNav() {
-  const { user } = useAuth() as { user: any };
+  const { user, logout } = useAuth() as { user: any; logout: () => Promise<void> };
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+    
+    console.log("Logout button clicked");
+    setIsLoggingOut(true);
+    
+    try {
+      await logout();
+      console.log("Logout completed successfully");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -56,10 +69,16 @@ export default function TopNav() {
                 variant="ghost" 
                 size="sm"
                 onClick={handleLogout}
-                className="p-1"
+                disabled={isLoggingOut}
+                className="p-1 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
                 data-testid="button-logout"
+                title={isLoggingOut ? "Logging out..." : "Logout"}
               >
-                <LogOut size={16} />
+                {isLoggingOut ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                ) : (
+                  <LogOut size={16} />
+                )}
               </Button>
             </div>
           </div>

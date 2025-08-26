@@ -1,3 +1,21 @@
+import dotenv from "dotenv";
+
+const result = dotenv.config({ path: "./.env" });
+if (result.error) {
+  console.error("Error loading .env file:", result.error);
+} else {
+  console.log(".env file loaded successfully:", result.parsed);
+}
+
+// Manually set DATABASE_URL as a fallback
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "mysql://root@localhost:3306/training";
+  console.log("Manually set DATABASE_URL:", process.env.DATABASE_URL);
+}
+
+// Log the loaded DATABASE_URL for debugging
+console.log("Loaded DATABASE_URL:", process.env.DATABASE_URL);
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -63,9 +81,10 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || '5000', 10);
   server.listen({
     port,
-    host: "0.0.0.0",
-    reusePort: true,
+    host: "localhost",
   }, () => {
     log(`serving on port ${port}`);
   });
 })();
+
+// Database connection test will be handled by the db.ts module

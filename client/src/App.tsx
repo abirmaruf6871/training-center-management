@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Students from "@/pages/students";
 import Courses from "@/pages/courses";
+import CourseManagement from "@/pages/course-management";
 import Payments from "@/pages/payments";
 import Reports from "@/pages/reports";
 
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/students" component={Students} />
           <Route path="/courses" component={Courses} />
+          <Route path="/course-management" component={CourseManagement} />
           <Route path="/payments" component={Payments} />
           <Route path="/reports" component={Reports} />
         </>

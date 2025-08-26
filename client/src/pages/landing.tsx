@@ -1,10 +1,45 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { GraduationCap } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (login) {
+          login(data.user);
+        }
+      } else {
+        setError("Invalid credentials. Try admin/admin");
+      }
+    } catch (err) {
+      setError("Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -20,29 +55,58 @@ export default function Landing() {
         
         <Card className="bg-white shadow-lg">
           <CardContent className="pt-6">
-            <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Welcome to ACMR Academy
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  Access your training center management dashboard
-                </p>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter username"
+                    required
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter password"
+                    required
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="text-red-600 text-sm text-center">
+                  {error}
+                </div>
+              )}
+
+              <div className="text-center text-xs text-gray-500">
+                <p>Database Credentials: admin / admin123</p>
               </div>
               
               <Button 
-                onClick={handleLogin}
+                type="submit"
+                disabled={isLoading}
                 className="w-full bg-blue-700 hover:bg-blue-800 transition-colors"
                 size="lg"
-                data-testid="button-login"
               >
-                Sign In
+                {isLoading ? "Signing In..." : "Sign In"}
               </Button>
-              
-              <div className="text-center text-xs text-gray-500">
-                <p>Secure authentication powered by Replit</p>
-              </div>
-            </div>
+            </form>
           </CardContent>
         </Card>
       </div>
