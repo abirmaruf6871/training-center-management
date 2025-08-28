@@ -14,7 +14,9 @@ import Payments from "@/pages/payments";
 import Reports from "@/pages/reports";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  
+  console.log('Router state:', { isAuthenticated, isLoading, user });
 
   return (
     <Switch>

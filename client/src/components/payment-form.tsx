@@ -1,8 +1,17 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertPaymentSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Define the payment schema locally since @shared/schema was deleted
+const insertPaymentSchema = z.object({
+  studentId: z.string().min(1, "Student is required"),
+  amount: z.string().min(1, "Amount is required"),
+  paymentMethod: z.string().min(1, "Payment method is required"),
+  paymentType: z.string().min(1, "Payment type is required"),
+  transactionId: z.string().optional(),
+  notes: z.string().optional(),
+});
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

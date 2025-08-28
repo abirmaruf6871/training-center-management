@@ -1,25 +1,41 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertStudentSchema } from "@shared/schema";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+
+// Define the student schema locally since @shared/schema was deleted
+const insertStudentSchema = z.object({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(1, "Phone is required"),
+  bmdc_no: z.string().optional(),
+  date_of_birth: z.string().min(1, "Date of birth is required"),
+  gender: z.enum(["male", "female", "other"]),
+  address: z.string().min(1, "Address is required"),
+  course_id: z.string().min(1, "Course is required"),
+  branch_id: z.string().min(1, "Branch is required"),
+  batch_id: z.string().min(1, "Batch is required"),
+  admission_date: z.string().min(1, "Admission date is required"),
+  total_fee: z.string().min(1, "Total fee is required"),
+  admission_fee: z.string().min(1, "Admission fee is required"),
+  discount_amount: z.string().optional(),
+  status: z.enum(["active", "inactive"]).default("active"),
+  notes: z.string().optional(),
+});
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
-const studentFormSchema = insertStudentSchema.extend({
-  totalFee: z.string().min(1, "Total fee is required"),
-  dueAmount: z.string().min(1, "Due amount is required"),
-});
-
-type StudentFormData = z.infer<typeof studentFormSchema>;
+type StudentFormData = z.infer<typeof insertStudentSchema>;
 
 interface StudentFormProps {
   onSubmit: (data: StudentFormData) => void;
   isLoading: boolean;
   courses: any[];
   branches: any[];
+  batches: any[];
   student?: any;
 }
 
@@ -28,31 +44,38 @@ export default function StudentForm({
   isLoading,
   courses,
   branches,
+  batches,
   student
 }: StudentFormProps) {
   const form = useForm<StudentFormData>({
-    resolver: zodResolver(studentFormSchema),
+    resolver: zodResolver(insertStudentSchema),
     defaultValues: {
-      name: student?.name || "",
+      first_name: student?.first_name || "",
+      last_name: student?.last_name || "",
       email: student?.email || "",
       phone: student?.phone || "",
-      bmdcNo: student?.bmdcNo || "",
-      courseId: student?.courseId || "",
-      branchId: student?.branchId || "",
-      batchName: student?.batchName || "",
-      totalFee: student?.totalFee?.toString() || "",
-      dueAmount: student?.dueAmount?.toString() || "",
-      paymentStatus: student?.paymentStatus || "pending",
-      isActive: student?.isActive ?? true,
+      bmdc_no: student?.bmdc_no || "",
+      date_of_birth: student?.date_of_birth || "",
+      gender: student?.gender || "male",
+      address: student?.address || "",
+      course_id: student?.course_id || "",
+      branch_id: student?.branch_id || "",
+      batch_id: student?.batch_id || "",
+      admission_date: student?.admission_date || "",
+      total_fee: student?.total_fee?.toString() || "",
+      admission_fee: student?.admission_fee?.toString() || "",
+      discount_amount: student?.discount_amount?.toString() || "0",
+      status: student?.status || "active",
+      notes: student?.notes || "",
     },
   });
 
   const handleSubmit = (data: StudentFormData) => {
     const processedData = {
       ...data,
-      totalFee: parseFloat(data.totalFee),
-      dueAmount: parseFloat(data.dueAmount),
-      paidAmount: parseFloat(data.totalFee) - parseFloat(data.dueAmount),
+      total_fee: parseFloat(data.total_fee),
+      admission_fee: parseFloat(data.admission_fee),
+      discount_amount: parseFloat(data.discount_amount || "0"),
     };
     onSubmit(processedData as any);
   };
@@ -63,12 +86,12 @@ export default function StudentForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="name"
+            name="first_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Dr. John Doe" {...field} data-testid="input-student-name" />
+                  <Input placeholder="John" {...field} data-testid="input-student-first-name" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -77,7 +100,21 @@ export default function StudentForm({
           
           <FormField
             control={form.control}
-            name="bmdcNo"
+            name="last_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Doe" {...field} data-testid="input-student-last-name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="bmdc_no"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>BMDC Registration No.</FormLabel>
@@ -120,10 +157,100 @@ export default function StudentForm({
           />
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="date_of_birth"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Date of Birth</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} data-testid="input-date-of-birth" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="gender"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Gender</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-gender">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Input placeholder="Full address" {...field} data-testid="input-address" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="admission_date"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Admission Date</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} data-testid="input-admission-date" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="discount_amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Discount Amount (৳)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    placeholder="0"
+                    {...field}
+                    data-testid="input-discount-amount"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <FormField
             control={form.control}
-            name="courseId"
+            name="course_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Course</FormLabel>
@@ -148,7 +275,7 @@ export default function StudentForm({
           
           <FormField
             control={form.control}
-            name="branchId"
+            name="branch_id"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Branch</FormLabel>
@@ -173,13 +300,24 @@ export default function StudentForm({
           
           <FormField
             control={form.control}
-            name="batchName"
+            name="batch_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Batch Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Batch 15" {...field} value={field.value || ""} data-testid="input-batch-name" />
-                </FormControl>
+                <FormLabel>Batch</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-batch">
+                      <SelectValue placeholder="Select batch" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {batches?.map((batch) => (
+                      <SelectItem key={batch.id} value={batch.id}>
+                        {batch.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -189,7 +327,7 @@ export default function StudentForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="totalFee"
+            name="total_fee"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Total Fee (৳)</FormLabel>
@@ -208,16 +346,59 @@ export default function StudentForm({
           
           <FormField
             control={form.control}
-            name="dueAmount"
+            name="admission_fee"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Due Amount (৳)</FormLabel>
+                <FormLabel>Admission Fee (৳)</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
-                    placeholder="20000"
+                    placeholder="5000"
                     {...field}
-                    data-testid="input-due-amount"
+                    data-testid="input-admission-fee"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || "active"}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Notes</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Additional notes (optional)"
+                    {...field}
+                    value={field.value || ""}
+                    data-testid="input-notes"
                   />
                 </FormControl>
                 <FormMessage />

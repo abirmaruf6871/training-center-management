@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { getApiUrl, API_ENDPOINTS } from "@/config/api";
 
 export default function Landing() {
   const [username, setUsername] = useState("");
@@ -19,7 +20,7 @@ export default function Landing() {
     setError("");
 
     try {
-      const response = await fetch("/api/login", {
+      const response = await fetch(getApiUrl(API_ENDPOINTS.AUTH.LOGIN), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -29,13 +30,23 @@ export default function Landing() {
 
       if (response.ok) {
         const data = await response.json();
-        if (login) {
-          login(data.user);
+        console.log('Login response:', data);
+        
+        // Check if we have the required data
+        if (data.user && data.token) {
+          console.log('Calling login function...');
+          login(data.user, data.token);
+        } else {
+          console.error('Invalid response format:', data);
+          setError("Invalid response from server");
         }
       } else {
+        const errorData = await response.json();
+        console.error('Login failed:', errorData);
         setError("Invalid credentials. Try admin/admin");
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError("Login failed. Please try again.");
     } finally {
       setIsLoading(false);

@@ -15,8 +15,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCourseSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Define the course schema locally since @shared/schema was deleted
+const insertCourseSchema = z.object({
+  name: z.string().min(1, "Course name is required"),
+  description: z.string().min(1, "Description is required"),
+  duration: z.number().min(1, "Duration must be at least 1 month"),
+  totalFee: z.string().min(1, "Total fee is required"),
+  admissionFee: z.string().min(1, "Admission fee is required"),
+  installmentCount: z.number().min(1, "Installment count must be at least 1"),
+  isActive: z.boolean().optional(),
+});
 import { 
   BookOpen, 
   Plus, 
