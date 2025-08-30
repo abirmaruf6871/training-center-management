@@ -158,14 +158,14 @@ export default function Courses() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
       <TopNav />
       <div className="flex pt-16">
         <Sidebar />
         <main className="flex-1 p-6">
           <div className="mb-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">Course Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Course Management</h1>
               <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
                 <DialogTrigger asChild>
                   <Button 

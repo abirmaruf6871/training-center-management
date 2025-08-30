@@ -11,19 +11,18 @@ class Batch extends Model
 {
     use HasFactory;
 
-    protected $keyType = 'string';
-    public $incrementing = false;
-
     protected $fillable = [
-        'id',
         'name',
-        'course_id',
-        'branch_id',
         'start_date',
         'end_date',
+        'course_id',
+        'branch_id',
+        'faculty_id',
         'max_students',
         'current_students',
-        'is_active',
+        'status',
+        'description',
+        'is_active'
     ];
 
     protected $casts = [
@@ -34,59 +33,72 @@ class Batch extends Model
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Get the course for this batch.
-     */
+    // Relationships
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
     }
 
-    /**
-     * Get the branch for this batch.
-     */
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
     }
 
-    /**
-     * Get the students in this batch.
-     */
+    public function faculty(): BelongsTo
+    {
+        return $this->belongsTo(Faculty::class);
+    }
+
     public function students(): HasMany
     {
         return $this->hasMany(Student::class);
     }
 
-    /**
-     * Get the classes for this batch.
-     */
-    public function classes(): HasMany
+    public function attendance(): HasMany
     {
-        return $this->hasMany(ClassRoom::class);
+        return $this->hasMany(Attendance::class);
     }
 
-    /**
-     * Check if batch is full.
-     */
-    public function isFull(): bool
+    public function exams(): HasMany
+    {
+        return $this->hasMany(Exam::class);
+    }
+
+    // Scopes
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeByBranch($query, $branchId)
+    {
+        return $query->where('branch_id', $branchId);
+    }
+
+    public function scopeByCourse($query, $courseId)
+    {
+        return $query->where('course_id', $courseId);
+    }
+
+    // Accessors & Mutators
+    public function getDurationAttribute()
+    {
+        if ($this->start_date && $this->end_date) {
+            return $this->start_date->diffInMonths($this->end_date);
+        }
+        return 0;
+    }
+
+    public function getCapacityPercentageAttribute()
+    {
+        if ($this->max_students > 0) {
+            return round(($this->current_students / $this->max_students) * 100, 1);
+        }
+        return 0;
+    }
+
+    public function getIsFullAttribute()
     {
         return $this->current_students >= $this->max_students;
-    }
-
-    /**
-     * Check if batch is active.
-     */
-    public function isActive(): bool
-    {
-        return $this->is_active;
-    }
-
-    /**
-     * Get available seats in batch.
-     */
-    public function getAvailableSeatsAttribute(): int
-    {
-        return $this->max_students - $this->current_students;
     }
 }

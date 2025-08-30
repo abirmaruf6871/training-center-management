@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class Expense extends Model
+class Income extends Model
 {
     use HasFactory, SoftDeletes, HasUuids;
 
@@ -17,17 +17,17 @@ class Expense extends Model
         'title',
         'description',
         'amount',
-        'category',
+        'type',
         'payment_method',
         'reference_number',
-        'expense_date',
+        'income_date',
         'status',
         'metadata'
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'expense_date' => 'date',
+        'income_date' => 'date',
         'metadata' => 'array'
     ];
 
@@ -43,9 +43,9 @@ class Expense extends Model
     }
 
     // Scopes
-    public function scopePaid($query)
+    public function scopeReceived($query)
     {
-        return $query->where('status', 'paid');
+        return $query->where('status', 'received');
     }
 
     public function scopePending($query)
@@ -53,14 +53,14 @@ class Expense extends Model
         return $query->where('status', 'pending');
     }
 
-    public function scopeByCategory($query, $category)
+    public function scopeByType($query, $type)
     {
-        return $query->where('category', $category);
+        return $query->where('type', $type);
     }
 
     public function scopeByDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween('expense_date', [$startDate, $endDate]);
+        return $query->whereBetween('income_date', [$startDate, $endDate]);
     }
 
     // Accessors
@@ -72,7 +72,7 @@ class Expense extends Model
     public function getStatusBadgeAttribute()
     {
         $badges = [
-            'paid' => 'bg-green-100 text-green-800',
+            'received' => 'bg-green-100 text-green-800',
             'pending' => 'bg-yellow-100 text-yellow-800',
             'cancelled' => 'bg-red-100 text-red-800'
         ];
@@ -80,25 +80,10 @@ class Expense extends Model
         return $badges[$this->status] ?? 'bg-gray-100 text-gray-800';
     }
 
-    public function getCategoryLabelAttribute()
-    {
-        $categories = [
-            'rent' => 'Rent',
-            'utilities' => 'Utilities',
-            'salary' => 'Salary',
-            'supplies' => 'Supplies',
-            'marketing' => 'Marketing',
-            'maintenance' => 'Maintenance',
-            'other' => 'Other'
-        ];
-        
-        return $categories[$this->category] ?? $this->category;
-    }
-
     // Methods
-    public function markAsPaid()
+    public function markAsReceived()
     {
-        $this->update(['status' => 'paid']);
+        $this->update(['status' => 'received']);
     }
 
     public function markAsPending()

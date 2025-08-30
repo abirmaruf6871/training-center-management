@@ -116,15 +116,15 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
       <TopNav />
       <div className="flex pt-16">
         <Sidebar />
         <main className="flex-1 p-6">
           {/* Dashboard Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Dashboard Overview</h1>
+            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
               <span>Today: <span className="font-medium">{today}</span></span>
               <span>•</span>
               <div className="flex items-center space-x-2">
@@ -152,8 +152,8 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Total Students</p>
-                    <p className="text-3xl font-bold text-gray-900" data-testid="text-total-students">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Students</p>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white" data-testid="text-total-students">
                       {statsLoading ? "..." : (stats as any)?.totalStudents || 0}
                     </p>
                     <p className="text-sm text-green-600">Active enrollment</p>
@@ -169,8 +169,8 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Monthly Income</p>
-                    <p className="text-3xl font-bold text-gray-900" data-testid="text-monthly-income">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Income</p>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white" data-testid="text-monthly-income">
                       {statsLoading ? "..." : formatCurrency((stats as any)?.monthlyIncome || 0)}
                     </p>
                     <p className="text-sm text-green-600">This month</p>
@@ -186,10 +186,10 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Pending Dues</p>
-                    <p className="text-3xl font-bold text-gray-900" data-testid="text-pending-dues">
-                      {statsLoading ? "..." : formatCurrency((stats as any)?.pendingDues || 0)}
-                    </p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Dues</p>
+                                            <p className="text-3xl font-bold text-gray-900 dark:text-white" data-testid="text-pending-dues">
+                          {statsLoading ? "..." : formatCurrency((stats as any)?.pendingDues || 0)}
+                        </p>
                     <p className="text-sm text-red-600">Outstanding</p>
                   </div>
                   <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
@@ -203,10 +203,10 @@ export default function Dashboard() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Active Courses</p>
-                    <p className="text-3xl font-bold text-gray-900" data-testid="text-active-courses">
-                      {statsLoading ? "..." : (stats as any)?.activeCourses || 0}
-                    </p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Courses</p>
+                                            <p className="text-3xl font-bold text-gray-900 dark:text-white" data-testid="text-active-courses">
+                          {statsLoading ? "..." : (stats as any)?.activeCourses || 0}
+                        </p>
                     <p className="text-sm text-blue-600">Available programs</p>
                   </div>
                   <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -236,8 +236,8 @@ export default function Dashboard() {
                         <GraduationCap className="text-gray-600" size={16} />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{admission.name}</p>
-                        <p className="text-xs text-gray-500">{admission.course} • {admission.branch}</p>
+                                                  <p className="text-sm font-medium text-gray-900 dark:text-white">{admission.name}</p>
+                                                  <p className="text-xs text-gray-500 dark:text-gray-400">{admission.course} • {admission.branch}</p>
                       </div>
                       <span className="text-xs text-gray-400">{admission.time}</span>
                     </div>
@@ -266,8 +266,8 @@ export default function Dashboard() {
                           <IconComponent className={classItem.iconColor} size={20} />
                         </div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{classItem.title}</p>
-                          <p className="text-xs text-gray-500">{classItem.faculty} • {classItem.room}</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{classItem.title}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{classItem.faculty} • {classItem.room}</p>
                           <p className="text-xs text-blue-600">{classItem.time}</p>
                         </div>
                       </div>
@@ -291,7 +291,7 @@ export default function Dashboard() {
                   data-testid="button-add-student"
                 >
                   <UserPlus className="text-blue-600" size={24} />
-                  <span className="text-sm font-medium text-gray-700">Add Student</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Add Student</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -299,7 +299,7 @@ export default function Dashboard() {
                   data-testid="button-collect-fee"
                 >
                   <CreditCard className="text-green-600" size={24} />
-                  <span className="text-sm font-medium text-gray-700">Collect Fee</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Collect Fee</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -307,7 +307,7 @@ export default function Dashboard() {
                   data-testid="button-schedule-class"
                 >
                   <CalendarPlus className="text-purple-600" size={24} />
-                  <span className="text-sm font-medium text-gray-700">Schedule Class</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Schedule Class</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -315,7 +315,7 @@ export default function Dashboard() {
                   data-testid="button-generate-report"
                 >
                   <FileText className="text-orange-600" size={24} />
-                  <span className="text-sm font-medium text-gray-700">Generate Report</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Generate Report</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -323,7 +323,7 @@ export default function Dashboard() {
                   data-testid="button-send-notice"
                 >
                   <Bell className="text-red-600" size={24} />
-                  <span className="text-sm font-medium text-gray-700">Send Notice</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Send Notice</span>
                 </Button>
                 <Button 
                   variant="outline" 
@@ -331,7 +331,7 @@ export default function Dashboard() {
                   data-testid="button-add-course"
                 >
                   <BookOpen className="text-indigo-600" size={24} />
-                  <span className="text-sm font-medium text-gray-700">Add Course</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Add Course</span>
                 </Button>
               </div>
             </CardContent>

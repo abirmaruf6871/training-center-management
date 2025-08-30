@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,22 +55,27 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Theme Toggle - Top Right */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="mx-auto h-16 w-16 bg-blue-700 rounded-full flex items-center justify-center mb-4">
             <GraduationCap className="text-white text-2xl" size={32} />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">ACMR Academy</h2>
-          <p className="text-gray-600">Training Center Management System</p>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">ACMR Academy</h2>
+          <p className="text-gray-600 dark:text-gray-300">Training Center Management System</p>
         </div>
         
-        <Card className="bg-white shadow-lg">
+        <Card className="bg-white dark:bg-gray-800 shadow-lg">
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="username" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="username" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Username
                   </Label>
                   <Input
@@ -84,7 +90,7 @@ export default function Landing() {
                 </div>
                 
                 <div>
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Password
                   </Label>
                   <Input
@@ -105,7 +111,7 @@ export default function Landing() {
                 </div>
               )}
 
-              <div className="text-center text-xs text-gray-500">
+              <div className="text-center text-xs text-gray-500 dark:text-gray-400">
                 <p>Database Credentials: admin / admin123</p>
               </div>
               

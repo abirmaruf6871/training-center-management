@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\BatchController;
 use App\Http\Controllers\Api\TestController;
 
 /*
@@ -579,6 +581,113 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dashboard routes
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    
+    // Batch routes
+    Route::get('/batches', [App\Http\Controllers\Api\BatchController::class, 'index']);
+    
+    // Attendance routes
+    Route::get('/attendance', [App\Http\Controllers\Api\AttendanceController::class, 'index']);
+    Route::post('/attendance', [App\Http\Controllers\Api\AttendanceController::class, 'store']);
+    Route::get('/attendance/{id}', [App\Http\Controllers\Api\AttendanceController::class, 'show']);
+    Route::put('/attendance/{id}', [App\Http\Controllers\Api\AttendanceController::class, 'update']);
+    Route::delete('/attendance/{id}', [App\Http\Controllers\Api\AttendanceController::class, 'destroy']);
+    Route::post('/attendance/batch', [App\Http\Controllers\Api\AttendanceController::class, 'markBatchAttendance']);
+    Route::get('/attendance/batch/{batchId}/stats', [App\Http\Controllers\Api\AttendanceController::class, 'getBatchAttendanceStats']);
+});
+
+// Multi-Branch Support Routes
+Route::prefix('branches')->group(function () {
+    // Public routes for basic branch info
+    Route::get('/public', [App\Http\Controllers\BranchController::class, 'index']);
+    Route::get('/public/{id}', [App\Http\Controllers\BranchController::class, 'show']);
+    
+    // Protected routes for branch management
+    Route::middleware(['auth:sanctum'])->group(function () {
+        // CRUD operations
+        Route::post('/', [App\Http\Controllers\BranchController::class, 'store']);
+        Route::put('/{id}', [App\Http\Controllers\BranchController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\BranchController::class, 'destroy']);
+        
+        // Branch management
+        Route::patch('/{id}/toggle-status', [App\Http\Controllers\BranchController::class, 'toggleStatus']);
+        Route::get('/{id}/statistics', [App\Http\Controllers\BranchController::class, 'statistics']);
+        
+        // Financial reporting
+        Route::get('/{id}/financial-report', [App\Http\Controllers\BranchController::class, 'financialReport']);
+        Route::get('/consolidated-report', [App\Http\Controllers\BranchController::class, 'consolidatedReport']);
+    });
+});
+
+// Income Management Routes
+Route::prefix('incomes')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [App\Http\Controllers\IncomeController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\IncomeController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\IncomeController::class, 'show']);
+        Route::put('/{id}', [App\Http\Controllers\IncomeController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\IncomeController::class, 'destroy']);
+        Route::get('/by-branch/{branchId}', [App\Http\Controllers\IncomeController::class, 'byBranch']);
+    });
+});
+
+// Expense Management Routes
+Route::prefix('expenses')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [App\Http\Controllers\ExpenseController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\ExpenseController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\ExpenseController::class, 'show']);
+        Route::put('/{id}', [App\Http\Controllers\ExpenseController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\ExpenseController::class, 'destroy']);
+        Route::get('/by-branch/{branchId}', [App\Http\Controllers\ExpenseController::class, 'byBranch']);
+    });
+});
+
+// Staff Management Routes
+Route::prefix('staff')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/', [App\Http\Controllers\StaffController::class, 'index']);
+        Route::post('/', [App\Http\Controllers\StaffController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\StaffController::class, 'show']);
+        Route::put('/{id}', [App\Http\Controllers\StaffController::class, 'update']);
+        Route::delete('/{id}', [App\Http\Controllers\StaffController::class, 'destroy']);
+        Route::get('/by-branch/{branchId}', [App\Http\Controllers\StaffController::class, 'byBranch']);
+    });
+});
+
+// Reports & Analytics Routes
+Route::prefix('reports')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/daily-cashbook', [App\Http\Controllers\ReportController::class, 'dailyCashbook']);
+        Route::get('/income-vs-expense', [App\Http\Controllers\ReportController::class, 'incomeVsExpense']);
+        Route::get('/profit-loss', [App\Http\Controllers\ReportController::class, 'profitLoss']);
+        Route::get('/enrollment-trend', [App\Http\Controllers\ReportController::class, 'enrollmentTrend']);
+        Route::get('/batch-attendance', [App\Http\Controllers\ReportController::class, 'batchAttendance']);
+        Route::get('/outstanding-dues', [App\Http\Controllers\ReportController::class, 'outstandingDues']);
+    });
+});
+
+// Notification & Automation Routes
+Route::prefix('notifications')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::post('/payment-reminder', [App\Http\Controllers\NotificationController::class, 'sendPaymentDueReminder']);
+        Route::post('/class-reminder', [App\Http\Controllers\NotificationController::class, 'sendClassReminder']);
+        Route::post('/exam-notice', [App\Http\Controllers\NotificationController::class, 'sendExamNotice']);
+        Route::post('/batch-announcement', [App\Http\Controllers\NotificationController::class, 'sendBatchStartingAnnouncement']);
+        Route::get('/history', [App\Http\Controllers\NotificationController::class, 'getNotificationHistory']);
+    });
+});
+
+// Security & Backup Routes
+Route::prefix('security')->group(function () {
+    Route::middleware(['auth:sanctum'])->group(function () {
+        Route::get('/user-roles', [App\Http\Controllers\SecurityController::class, 'getUserRoles']);
+        Route::put('/update-role', [App\Http\Controllers\SecurityController::class, 'updateUserRole']);
+        Route::put('/change-password', [App\Http\Controllers\SecurityController::class, 'changePassword']);
+        Route::post('/export-data', [App\Http\Controllers\SecurityController::class, 'exportData']);
+        Route::get('/backup-status', [App\Http\Controllers\SecurityController::class, 'getBackupStatus']);
+        Route::post('/initiate-backup', [App\Http\Controllers\SecurityController::class, 'initiateBackup']);
+        Route::get('/security-status', [App\Http\Controllers\SecurityController::class, 'getSecurityStatus']);
+    });
 });
 
 // Fallback route for unmatched API endpoints

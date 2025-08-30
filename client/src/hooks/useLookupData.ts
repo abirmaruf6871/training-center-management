@@ -23,9 +23,24 @@ export interface Branch {
 export interface Batch {
   id: string;
   name: string;
+  description?: string;
   start_date?: string;
   end_date?: string;
   course_id?: string;
+  branch_id?: string;
+  faculty_id?: string;
+  max_students?: number;
+  current_students?: number;
+  status?: string;
+  is_active?: boolean;
+}
+
+export interface Faculty {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  specialization?: string;
   is_active?: boolean;
 }
 
@@ -33,6 +48,7 @@ export const useLookupData = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [batches, setBatches] = useState<Batch[]>([]);
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +112,33 @@ export const useLookupData = () => {
     }
   }, []);
 
+  const fetchFaculties = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getFaculties();
+      
+      // Handle paginated response from public endpoints
+      if (Array.isArray(response)) {
+        setFaculties(response);
+      } else if (response.success && response.data) {
+        // Handle paginated response: response.data.data contains the actual array
+        if (response.data.data && Array.isArray(response.data.data)) {
+          setFaculties(response.data.data);
+        } else if (Array.isArray(response.data)) {
+          setFaculties(response.data);
+        } else {
+          setFaculties([]);
+        }
+      } else {
+        setError(response.message || 'Failed to fetch faculties');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const fetchAllLookupData = useCallback(async () => {
     try {
       setLoading(true);
@@ -105,13 +148,14 @@ export const useLookupData = () => {
         fetchCourses(),
         fetchBranches(),
         fetchBatches(),
+        fetchFaculties(),
       ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  }, [fetchCourses, fetchBranches, fetchBatches]);
+  }, [fetchCourses, fetchBranches, fetchBatches, fetchFaculties]);
 
   // Initial fetch
   useEffect(() => {
@@ -122,11 +166,13 @@ export const useLookupData = () => {
     courses,
     branches,
     batches,
+    faculties,
     loading,
     error,
     fetchCourses,
     fetchBranches,
     fetchBatches,
+    fetchFaculties,
     fetchAllLookupData,
     clearError: () => setError(null),
   };

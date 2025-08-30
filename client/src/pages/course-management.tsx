@@ -54,13 +54,16 @@ export default function CourseManagement() {
   const { branches } = useLookupData();
   
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [courses, setCourses] = useState<Course[]>([]);
-  const [enrolledStudents, setEnrolledStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+     const [enrolledStudents, setEnrolledStudents] = useState<Student[]>([]);
+   const [loading, setLoading] = useState(false);
+   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+   const [studentsLoading, setStudentsLoading] = useState(false);
+   const [studentsCache, setStudentsCache] = useState<Record<string, Student[]>>({});
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -105,15 +108,31 @@ export default function CourseManagement() {
                   });
                 }
                 
-                // Calculate real-time statistics
-                const studentCount = students.length;
-                const totalIncome = students.reduce((sum: number, student: Student) => sum + (student.final_fee || 0), 0);
-                const pendingDues = students.reduce((sum: number, student: Student) => {
-                  const paidAmount = (student.final_fee || 0) - (student.discount_amount || 0);
-                  return Math.max(0, (student.total_fee || 0) - paidAmount);
-                }, 0);
+                                 // Calculate real-time statistics
+                 const studentCount = students.length;
+                 const totalIncome = students.reduce((sum: number, student: Student) => {
+                   const fee = parseFloat(student.final_fee?.toString() || '0');
+                   return sum + (isNaN(fee) ? 0 : fee);
+                 }, 0);
+                 const pendingDues = students.reduce((sum: number, student: Student) => {
+                   const totalFee = parseFloat(student.total_fee?.toString() || '0');
+                   const finalFee = parseFloat(student.final_fee?.toString() || '0');
+                   const discountAmount = parseFloat(student.discount_amount?.toString() || '0');
+                   
+                   if (isNaN(totalFee) || isNaN(finalFee) || isNaN(discountAmount)) {
+                     return sum;
+                   }
+                   
+                   const paidAmount = finalFee - discountAmount;
+                   return sum + Math.max(0, totalFee - paidAmount);
+                 }, 0);
                 
-                console.log(`📈 Stats for ${course.name}:`, { studentCount, totalIncome, pendingDues });
+                                 console.log(`📈 Stats for ${course.name}:`, { studentCount, totalIncome, pendingDues });
+                 console.log(`💰 Income calculation details for ${course.name}:`, students.map((s: Student) => ({
+                   final_fee: s.final_fee,
+                   final_fee_type: typeof s.final_fee,
+                   parsed: parseFloat(s.final_fee?.toString() || '0')
+                 })));
                
                return {
                  ...course,
@@ -155,12 +174,14 @@ export default function CourseManagement() {
     }
   };
 
-  // Refresh course statistics (call this after adding/removing students)
-  const refreshCourseStats = async () => {
-    console.log('Refreshing course statistics...');
-    await fetchCourses();
-    console.log('Course statistics refreshed!');
-  };
+     // Refresh course statistics (call this after adding/removing students)
+   const refreshCourseStats = async () => {
+     console.log('Refreshing course statistics...');
+     // Clear cache when refreshing stats
+     setStudentsCache({});
+     await fetchCourses();
+     console.log('Course statistics refreshed!');
+   };
 
   // Debug function to check all students in database
   const debugAllStudents = async () => {
@@ -192,23 +213,25 @@ export default function CourseManagement() {
     e.preventDefault();
     try {
       const response = await apiService.createCourse(formData);
-      if (response.success) {
-        toast({ title: "Success!", description: "Course added successfully" });
-        setIsAddDialogOpen(false);
-        setFormData({
-          name: "",
-          description: "",
-          duration: 12,
-          total_fee: 0,
-          admission_fee: 0,
-          installment_count: 1,
-          batch_size_limit: 30,
-          branch_id: "",
-          discount_percentage: 0,
-          is_active: true
-        });
-        fetchCourses();
-      } else {
+             if (response.success) {
+         toast({ title: "Success!", description: "Course added successfully" });
+         setIsAddDialogOpen(false);
+         setFormData({
+           name: "",
+           description: "",
+           duration: 12,
+           total_fee: 0,
+           admission_fee: 0,
+           installment_count: 1,
+           batch_size_limit: 30,
+           branch_id: "",
+           discount_percentage: 0,
+           is_active: true
+         });
+         // Clear cache when adding new course
+         setStudentsCache({});
+         fetchCourses();
+       } else {
         toast({ title: "Error!", description: response.message || "Failed to add course", variant: "destructive" });
       }
     } catch (error) {
@@ -217,31 +240,48 @@ export default function CourseManagement() {
     }
   };
 
-  // Handle view course
-  const handleView = async (course: Course) => {
-    console.log('handleView called with course:', course);
-    console.log('Current enrolledStudents state:', enrolledStudents);
-    setSelectedCourse(course);
-    try {
-      const response = await apiService.getStudents({ course_id: course.id });
-      console.log('API Response:', response);
-             if (response.success) {
+     // Handle view course - Optimized for performance
+   const handleView = async (course: Course) => {
+     console.log('handleView called with course:', course);
+     setSelectedCourse(course);
+     
+     // Check if we have cached data
+     if (studentsCache[course.id]) {
+       console.log('Using cached students data for course:', course.id);
+       setEnrolledStudents(studentsCache[course.id]);
+       setIsViewDialogOpen(true);
+       return;
+     }
+     
+     // Show modal immediately with loading state
+     setIsViewDialogOpen(true);
+     setStudentsLoading(true);
+     
+     try {
+       const response = await apiService.getStudents({ course_id: course.id });
+       console.log('API Response:', response);
+       
+       if (response.success) {
          const students = response.data?.data || response.data || [];
          console.log('Setting enrolled students:', students);
-         console.log('Students type:', typeof students);
-         console.log('Students is array:', Array.isArray(students));
          setEnrolledStudents(students);
+         
+         // Cache the results for future use
+         setStudentsCache(prev => ({
+           ...prev,
+           [course.id]: students
+         }));
        } else {
-        console.log('API call failed, setting empty array');
-        setEnrolledStudents([]);
-      }
-    } catch (err) {
-      console.error('Error fetching enrolled students:', err);
-      setEnrolledStudents([]);
-    }
-    console.log('About to open view dialog');
-    setIsViewDialogOpen(true);
-  };
+         console.log('API call failed, setting empty array');
+         setEnrolledStudents([]);
+       }
+     } catch (err) {
+       console.error('Error fetching enrolled students:', err);
+       setEnrolledStudents([]);
+     } finally {
+       setStudentsLoading(false);
+     }
+   };
 
   // Edit course
   const handleEdit = (course: Course) => {
@@ -268,12 +308,14 @@ export default function CourseManagement() {
     
     try {
       const response = await apiService.updateCourse(selectedCourse.id, formData);
-      if (response.success) {
-        toast({ title: "Success!", description: "Course updated successfully" });
-        setIsEditDialogOpen(false);
-        setSelectedCourse(null);
-        fetchCourses();
-      } else {
+             if (response.success) {
+         toast({ title: "Success!", description: "Course updated successfully" });
+         setIsEditDialogOpen(false);
+         setSelectedCourse(null);
+         // Clear cache when updating course
+         setStudentsCache({});
+         fetchCourses();
+       } else {
         toast({ title: "Error!", description: response.message || "Failed to update course", variant: "destructive" });
       }
     } catch (error) {
@@ -288,10 +330,12 @@ export default function CourseManagement() {
     
     try {
       const response = await apiService.deleteCourse(id);
-      if (response.success) {
-        toast({ title: "Success!", description: "Course deleted successfully" });
-        fetchCourses();
-      } else {
+             if (response.success) {
+         toast({ title: "Success!", description: "Course deleted successfully" });
+         // Clear cache when deleting course
+         setStudentsCache({});
+         fetchCourses();
+       } else {
         toast({ title: "Error!", description: response.message || "Failed to delete course", variant: "destructive" });
       }
     } catch (error) {
@@ -300,15 +344,26 @@ export default function CourseManagement() {
     }
   };
 
-  const filteredCourses = courses.filter(course =>
-    course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCourses = courses.filter(course => {
+    const matchesSearch = course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         course.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "all" || 
+                         (statusFilter === "active" && course.is_active) ||
+                         (statusFilter === "inactive" && !course.is_active);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('bn-BD', {
+    if (isNaN(amount) || amount === null || amount === undefined) {
+      return '৳0.00';
+    }
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'BDT'
+      currency: 'BDT',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
@@ -329,9 +384,18 @@ export default function CourseManagement() {
     });
   };
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
+     useEffect(() => {
+     fetchCourses();
+   }, []);
+
+   // Debounced search for better performance
+   useEffect(() => {
+     const timer = setTimeout(() => {
+       // Search logic is already handled by filteredCourses
+     }, 300);
+     
+     return () => clearTimeout(timer);
+   }, [searchTerm]);
 
   // Debug enrolledStudents state changes
   useEffect(() => {
@@ -342,15 +406,15 @@ export default function CourseManagement() {
 
   if (loading && courses.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
         <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
-        <p className="ml-4 text-gray-600">Loading courses...</p>
+        <p className="ml-4 text-gray-600 dark:text-gray-400">Loading courses...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
       <TopNav />
       <div className="flex pt-16">
         <Sidebar />
@@ -358,8 +422,8 @@ export default function CourseManagement() {
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Course Management</h1>
-                <p className="text-sm text-gray-600">Manage your academy courses, fees, and student enrollment</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Course Management</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Manage your academy courses, fees, and student enrollment</p>
               </div>
                              <div className="flex gap-3">
                  <Button 
@@ -386,28 +450,48 @@ export default function CourseManagement() {
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader><DialogTitle>Add New Course</DialogTitle></DialogHeader>
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-white">Add New Course</DialogTitle>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">Fill in the details below to create a new course for your academy</p>
+                                         <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                       <p className="text-xs text-blue-800 dark:text-blue-200">
+                         <strong>Note:</strong> Fields marked with * are required. All monetary values should be in BDT (Bangladeshi Taka). You can enter any amount from 1 BDT onwards.
+                       </p>
+                       
+                     </div>
+                  </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Basic Information */}
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        Basic Information
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input 
-                          placeholder="Course Name" 
-                          value={formData.name} 
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
-                          required 
-                        />
-                        <Input 
-                          placeholder="Duration (months)" 
-                          type="number" 
-                          value={formData.duration} 
-                          onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))} 
-                          required 
-                        />
-                        <div className="md:col-span-2">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course Name *</label>
                           <Input 
-                            placeholder="Description" 
+                            placeholder="e.g., Basic Medical Training, Ultrasound Course, ECG Training" 
+                            value={formData.name} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration (months) *</label>
+                          <Input 
+                            placeholder="e.g., 6, 12, 24" 
+                            type="number" 
+                            min="1"
+                            value={formData.duration} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))} 
+                            required 
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course Description *</label>
+                          <Input 
+                            placeholder="e.g., Comprehensive training covering medical fundamentals, practical skills, and hands-on experience in a clinical setting. Students will learn patient care, medical procedures, and professional ethics." 
                             value={formData.description} 
                             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} 
                             required 
@@ -417,73 +501,120 @@ export default function CourseManagement() {
                     </div>
 
                     {/* Financial Information */}
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Information</h3>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <DollarSign className="h-5 w-5 text-green-600" />
+                        Financial Information
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input 
-                          placeholder="Total Fee" 
-                          type="number" 
-                          value={formData.total_fee} 
-                          onChange={(e) => setFormData(prev => ({ ...prev, total_fee: parseInt(e.target.value) || 0 }))} 
-                          required 
-                        />
-                        <Input 
-                          placeholder="Admission Fee" 
-                          type="number" 
-                          value={formData.admission_fee} 
-                          onChange={(e) => setFormData(prev => ({ ...prev, admission_fee: parseInt(e.target.value) || 0 }))} 
-                          required 
-                        />
-                        <Input 
-                          placeholder="Installment Count" 
-                          type="number" 
-                          value={formData.installment_count} 
-                          onChange={(e) => setFormData(prev => ({ ...prev, installment_count: parseInt(e.target.value) || 0 }))} 
-                          required 
-                        />
-                        <Input 
-                          placeholder="Discount Percentage" 
-                          type="number" 
-                          value={formData.discount_percentage} 
-                          onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))} 
-                        />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Total Course Fee (BDT) *</label>
+                          <Input 
+                            placeholder="e.g., 50000, 75000, 100000" 
+                            type="number" 
+                            min="1"
+                            step="1"
+                            value={formData.total_fee} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, total_fee: parseInt(e.target.value) || 0 }))} 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Admission Fee (BDT) *</label>
+                                                    <Input 
+                            placeholder="e.g., 10000, 15000, 20000" 
+                            type="number" 
+                            min="1"
+                            step="1"
+                            value={formData.admission_fee} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, admission_fee: parseInt(e.target.value) || 0 }))} 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Number of Installments *</label>
+                          <Input 
+                            placeholder="e.g., 3, 6, 12" 
+                            type="number" 
+                            min="1"
+                            value={formData.installment_count} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, installment_count: parseInt(e.target.value) || 0 }))} 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Discount Percentage (%)</label>
+                          <Input 
+                            placeholder="e.g., 10, 15, 20" 
+                            type="number" 
+                            min="0"
+                            value={formData.discount_percentage} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))} 
+                          />
+                        </div>
                       </div>
                     </div>
 
                     {/* Course Settings */}
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Course Settings</h3>
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <Settings className="h-5 w-5 text-purple-600" />
+                        Course Settings
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input 
-                          placeholder="Batch Size Limit" 
-                          type="number" 
-                          value={formData.batch_size_limit} 
-                          onChange={(e) => setFormData(prev => ({ ...prev, batch_size_limit: parseInt(e.target.value) || 0 }))} 
-                          required 
-                        />
-                        <Select value={formData.branch_id} onValueChange={(value) => setFormData(prev => ({ ...prev, branch_id: value }))} required>
-                          <SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger>
-                          <SelectContent>
-                            {branches.map(branch => (
-                              <SelectItem key={branch.id} value={branch.id.toString()}>
-                                {branch.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select value={formData.is_active ? "active" : "inactive"} onValueChange={(value) => setFormData(prev => ({ ...prev, is_active: value === "active" }))}>
-                          <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="inactive">Inactive</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Maximum Batch Size *</label>
+                          <Input 
+                            placeholder="e.g., 20, 30, 50" 
+                            type="number" 
+                            min="1"
+                            value={formData.batch_size_limit} 
+                            onChange={(e) => setFormData(prev => ({ ...prev, batch_size_limit: parseInt(e.target.value) || 0 }))} 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Branch Location *</label>
+                          <Select value={formData.branch_id} onValueChange={(value) => setFormData(prev => ({ ...prev, branch_id: value }))} required>
+                            <SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger>
+                            <SelectContent>
+                              {branches.map(branch => (
+                                <SelectItem key={branch.id} value={branch.id.toString()}>
+                                  {branch.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Course Status *</label>
+                          <Select value={formData.is_active ? "active" : "inactive"} onValueChange={(value) => setFormData(prev => ({ ...prev, is_active: value === "active" }))}>
+                            <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-4">
-                      <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                      <Button type="submit">Add Course</Button>
+                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsAddDialogOpen(false)}
+                        className="px-6 py-2"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit"
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Course
+                      </Button>
                     </div>
                   </form>
                 </DialogContent>
@@ -513,9 +644,12 @@ export default function CourseManagement() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Students</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {courses.reduce((sum: number, course: Course) => sum + (course.studentCount || 0), 0)}
-                  </p>
+                                     <p className="text-2xl font-bold text-gray-900">
+                     {courses.reduce((sum: number, course: Course) => {
+                       const count = course.studentCount || 0;
+                       return sum + (isNaN(count) ? 0 : count);
+                     }, 0)}
+                   </p>
                 </div>
               </div>
             </div>
@@ -527,9 +661,12 @@ export default function CourseManagement() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Income</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(courses.reduce((sum: number, course: Course) => sum + (course.totalIncome || 0), 0))}
-                  </p>
+                                     <p className="text-2xl font-bold text-gray-900">
+                     {formatCurrency(courses.reduce((sum: number, course: Course) => {
+                       const income = course.totalIncome || 0;
+                       return sum + (isNaN(income) ? 0 : income);
+                     }, 0))}
+                   </p>
                 </div>
               </div>
             </div>
@@ -541,9 +678,12 @@ export default function CourseManagement() {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Pending Dues</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(courses.reduce((sum: number, course: Course) => sum + (course.pendingDues || 0), 0))}
-                  </p>
+                                     <p className="text-2xl font-bold text-gray-900">
+                     {formatCurrency(courses.reduce((sum: number, course: Course) => {
+                       const dues = course.pendingDues || 0;
+                       return sum + (isNaN(dues) ? 0 : dues);
+                     }, 0))}
+                   </p>
                 </div>
               </div>
             </div>
@@ -554,7 +694,7 @@ export default function CourseManagement() {
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Search Courses</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Courses</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
@@ -565,20 +705,55 @@ export default function CourseManagement() {
                     />
                   </div>
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status Filter</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Courses</SelectItem>
+                      <SelectItem value="active">Active Only</SelectItem>
+                      <SelectItem value="inactive">Inactive Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
+                  <Button 
+                    onClick={() => {
+                      setSearchTerm("");
+                      setStatusFilter("all");
+                    }}
+                    variant="outline"
+                    className="w-40"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Filter Summary */}
+          <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            Showing {filteredCourses.length} of {courses.length} courses
+            {searchTerm && ` matching "${searchTerm}"`}
+            {statusFilter !== "all" && ` (${statusFilter} only)`}
+          </div>
+
           {/* Courses Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredCourses.map((course: Course) => (
-              <div key={course.id} className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-200 overflow-hidden">
+              <div key={course.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-200 overflow-hidden">
                 {/* Course Header */}
-                <div className="p-6 border-b border-gray-100">
+                <div className="p-6 border-b border-gray-100 dark:border-gray-700">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{course.name}</h3>
-                      <p className="text-gray-600 text-sm line-clamp-2">{course.description}</p>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{course.name}</h3>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2">{course.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {course.is_active ? (
@@ -596,19 +771,19 @@ export default function CourseManagement() {
                   {/* Course Details */}
                   <div className="mt-4 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Calendar className="h-4 w-4" />
                         <span>{getDurationText(course.duration)}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Users className="h-4 w-4" />
                         <span>{course.batch_size_limit} students</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Building2 className="h-4 w-4" />
                         <span>{branches.find(b => b.id === course.branch_id)?.name || 'N/A'}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <CreditCard className="h-4 w-4" />
                         <span>{course.installment_count} installments</span>
                       </div>
@@ -650,13 +825,17 @@ export default function CourseManagement() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 pt-4 border-t border-gray-100">
-                      <button
-                        onClick={() => handleView(course)}
-                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View
-                      </button>
+                                             <button
+                         onClick={() => handleView(course)}
+                         className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                         title={studentsCache[course.id] ? "View (cached)" : "View"}
+                       >
+                         <Eye className="h-4 w-4" />
+                         View
+                         {studentsCache[course.id] && (
+                           <span className="text-xs text-green-600">⚡</span>
+                         )}
+                       </button>
                       <button
                         onClick={() => handleEdit(course)}
                         className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
@@ -716,12 +895,16 @@ export default function CourseManagement() {
                 <DialogHeader>
                   <div className="flex items-center justify-between">
                     <DialogTitle className="text-2xl font-bold text-gray-900">{selectedCourse.name}</DialogTitle>
-                    <button
-                      onClick={() => setIsViewDialogOpen(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="h-6 w-6" />
-                    </button>
+                                         <button
+                       onClick={() => {
+                         setIsViewDialogOpen(false);
+                         // Clear enrolled students when closing modal to free memory
+                         setEnrolledStudents([]);
+                       }}
+                       className="text-gray-400 hover:text-gray-600"
+                     >
+                       <X className="h-6 w-6" />
+                     </button>
                   </div>
                 </DialogHeader>
                 
@@ -781,118 +964,198 @@ export default function CourseManagement() {
                     </div>
                   </div>
 
-                  {/* Statistics */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 rounded-xl p-6 text-center">
-                      <div className="text-3xl font-bold text-blue-600 mb-2">{selectedCourse.studentCount || 0}</div>
-                      <div className="text-blue-600 font-medium">Enrolled Students</div>
-                    </div>
-                    <div className="bg-green-50 rounded-xl p-6 text-center">
-                      <div className="text-3xl font-bold text-green-600 mb-2">{formatCurrency(selectedCourse.totalIncome || 0)}</div>
-                      <div className="text-green-600 font-medium">Total Income</div>
-                    </div>
-                    <div className="bg-orange-50 rounded-xl p-6 text-center">
-                      <div className="text-3xl font-bold text-orange-600 mb-2">{formatCurrency(selectedCourse.pendingDues || 0)}</div>
-                      <div className="text-orange-600 font-medium">Pending Dues</div>
-                    </div>
-                  </div>
+                                     {/* Statistics */}
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="bg-blue-50 rounded-xl p-6 text-center">
+                       <div className="text-3xl font-bold text-blue-600 mb-2">
+                         {studentsLoading ? (
+                           <div className="h-8 bg-blue-200 rounded animate-pulse"></div>
+                         ) : (
+                           selectedCourse.studentCount || 0
+                         )}
+                       </div>
+                       <div className="text-blue-600 font-medium">Enrolled Students</div>
+                     </div>
+                     <div className="bg-green-50 rounded-xl p-6 text-center">
+                       <div className="text-3xl font-bold text-green-600 mb-2">
+                         {studentsLoading ? (
+                           <div className="h-8 bg-green-200 rounded animate-pulse"></div>
+                         ) : (
+                           formatCurrency(selectedCourse.totalIncome || 0)
+                         )}
+                       </div>
+                       <div className="text-green-600 font-medium">Total Income</div>
+                     </div>
+                     <div className="bg-orange-50 rounded-xl p-6 text-center">
+                       <div className="text-3xl font-bold text-orange-600 mb-2">
+                         {studentsLoading ? (
+                           <div className="h-8 bg-orange-200 rounded animate-pulse"></div>
+                         ) : (
+                           formatCurrency(selectedCourse.pendingDues || 0)
+                         )}
+                       </div>
+                       <div className="text-orange-600 font-medium">Pending Dues</div>
+                     </div>
+                   </div>
 
-                  {/* Enrolled Students List */}
-                  <div className="bg-gray-50 rounded-xl p-6">
-                                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Enrolled Students ({(enrolledStudents || []).length})</h3>
-                    
-                                         {(enrolledStudents || []).length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-lg font-medium text-gray-900 mb-2">No students enrolled yet</p>
-                        <p className="text-gray-600">Students will appear here once they enroll in this course</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Student Name</TableHead>
-                              <TableHead>Email</TableHead>
-                              <TableHead>Phone</TableHead>
-                              <TableHead>Admission Date</TableHead>
-                              <TableHead>Payment Status</TableHead>
-                                                             <TableHead>Total Fee</TableHead>
+                                     {/* Enrolled Students List */}
+                   <div className="bg-gray-50 rounded-xl p-6">
+                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                       <span>Enrolled Students</span>
+                       {studentsLoading ? (
+                         <div className="flex items-center gap-2 animate-in fade-in duration-200">
+                           <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
+                           <span className="text-sm text-gray-500">Loading...</span>
+                         </div>
+                       ) : (
+                         <Badge variant="secondary" className="text-xs animate-in fade-in duration-200">
+                           {(enrolledStudents || []).length} students
+                         </Badge>
+                       )}
+                     </h3>
+                     
+                     <div className="transition-all duration-300 ease-in-out">
+                       {studentsLoading ? (
+                       <div className="space-y-4">
+                         {/* Skeleton loading for table */}
+                         <div className="animate-pulse">
+                           <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                           <div className="space-y-3">
+                             {[1, 2, 3].map((i) => (
+                               <div key={i} className="flex space-x-4">
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                 <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                         <div className="text-center py-4">
+                           <Loader2 className="h-6 w-6 text-blue-500 animate-spin mx-auto mb-2" />
+                           <p className="text-sm text-gray-500">Loading enrolled students...</p>
+                         </div>
+                       </div>
+                     ) : (enrolledStudents || []).length === 0 ? (
+                       <div className="text-center py-8 text-gray-500">
+                         <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                         <p className="text-lg font-medium text-gray-900 mb-2">No students enrolled yet</p>
+                         <p className="text-gray-600">Students will appear here once they enroll in this course</p>
+                       </div>
+                     ) : (
+                                             <div className="overflow-x-auto animate-in fade-in duration-300">
+                         <Table>
+                           <TableHeader>
+                             <TableRow>
+                               <TableHead>Student Name</TableHead>
+                               <TableHead>Email</TableHead>
+                               <TableHead>Phone</TableHead>
+                               <TableHead>Admission Date</TableHead>
+                               <TableHead>Payment Status</TableHead>
+                               <TableHead>Total Fee</TableHead>
                                <TableHead>Final Fee</TableHead>
                                <TableHead>Discount</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                                                        {(() => {
-                              const students = enrolledStudents || [];
-                              console.log('Before map - students:', students);
-                              console.log('Students type:', typeof students);
-                              console.log('Students is array:', Array.isArray(students));
-                              if (!Array.isArray(students)) {
-                                console.error('Students is not an array, setting to empty array');
-                                return [];
-                              }
-                              return students.map((student) => (
-                                <TableRow key={student.id}>
-                                  <TableCell>
-                                    <div className="font-medium">
-                                      {student.first_name} {student.last_name}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>{student.email}</TableCell>
-                                  <TableCell>{student.phone}</TableCell>
-                                  <TableCell>{formatDate(student.admission_date)}</TableCell>
-                                  <TableCell>
-                                    <Badge className={
-                                      student.payment_status === 'completed' ? 'bg-green-100 text-green-800' :
-                                      student.payment_status === 'partial' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-red-100 text-red-800'
-                                    }>
-                                      {student.payment_status.charAt(0).toUpperCase() + student.payment_status.slice(1)}
-                                    </Badge>
-                                  </TableCell>
-                                                                     <TableCell className="font-medium">{formatCurrency(student.total_fee)}</TableCell>
+                             </TableRow>
+                           </TableHeader>
+                           <TableBody>
+                             {(() => {
+                               const students = enrolledStudents || [];
+                               console.log('Before map - students:', students);
+                               console.log('Students type:', typeof students);
+                               console.log('Students is array:', Array.isArray(students));
+                               if (!Array.isArray(students)) {
+                                 console.error('Students is not an array, setting to empty array');
+                                 return [];
+                               }
+                               return students.map((student, index) => (
+                                 <TableRow 
+                                   key={student.id}
+                                   className="animate-in fade-in slide-in-from-bottom-2 duration-300"
+                                   style={{ animationDelay: `${index * 50}ms` }}
+                                 >
+                                   <TableCell>
+                                     <div className="font-medium">
+                                       {student.first_name} {student.last_name}
+                                     </div>
+                                   </TableCell>
+                                   <TableCell>{student.email}</TableCell>
+                                   <TableCell>{student.phone}</TableCell>
+                                   <TableCell>{formatDate(student.admission_date)}</TableCell>
+                                   <TableCell>
+                                     <Badge className={
+                                       student.payment_status === 'completed' ? 'bg-green-100 text-green-800' :
+                                       student.payment_status === 'partial' ? 'bg-yellow-100 text-yellow-800' :
+                                       'bg-red-100 text-red-800'
+                                     }>
+                                       {student.payment_status.charAt(0).toUpperCase() + student.payment_status.slice(1)}
+                                     </Badge>
+                                   </TableCell>
+                                   <TableCell className="font-medium">{formatCurrency(student.total_fee)}</TableCell>
                                    <TableCell className="text-green-600 font-medium">{formatCurrency(student.final_fee)}</TableCell>
                                    <TableCell className="text-red-600 font-medium">{formatCurrency(student.discount_amount)}</TableCell>
-                                </TableRow>
-                              ));
-                            })()}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
+                                 </TableRow>
+                               ));
+                             })()}
+                           </TableBody>
+                         </Table>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+                 </div>
+               </DialogContent>
+             </Dialog>
+           )}
 
           {/* Edit Course Modal */}
           {isEditDialogOpen && selectedCourse && (
             <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader><DialogTitle>Edit Course</DialogTitle></DialogHeader>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold text-gray-900">Edit Course</DialogTitle>
+                  <p className="text-sm text-gray-600 mt-2">Update the course information below</p>
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-800">
+                      <strong>Note:</strong> Fields marked with * are required. All monetary values should be in BDT (Bangladeshi Taka). You can enter any amount from 1 BDT onwards.
+                    </p>
+                  </div>
+                </DialogHeader>
                 <form onSubmit={handleUpdate} className="space-y-6">
                   {/* Basic Information */}
                   <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      Basic Information
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input 
-                        placeholder="Course Name" 
-                        value={formData.name} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
-                        required 
-                      />
-                      <Input 
-                        placeholder="Duration (months)" 
-                        type="number" 
-                        value={formData.duration} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))} 
-                        required 
-                      />
-                      <div className="md:col-span-2">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Course Name *</label>
                         <Input 
-                          placeholder="Description" 
+                          placeholder="e.g., Basic Medical Training, Ultrasound Course, ECG Training" 
+                          value={formData.name} 
+                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Duration (months) *</label>
+                        <Input 
+                          placeholder="e.g., 6, 12, 24" 
+                          type="number" 
+                          min="1"
+                          value={formData.duration} 
+                          onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 0 }))} 
+                          required 
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Course Description *</label>
+                        <Input 
+                          placeholder="e.g., Comprehensive training covering medical fundamentals, practical skills, and hands-on experience in a clinical setting. Students will learn patient care, medical procedures, and professional ethics." 
                           value={formData.description} 
                           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} 
                           required 
@@ -903,72 +1166,119 @@ export default function CourseManagement() {
 
                   {/* Financial Information */}
                   <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Financial Information</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                      Financial Information
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input 
-                        placeholder="Total Fee" 
-                        type="number" 
-                        value={formData.total_fee} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, total_fee: parseInt(e.target.value) || 0 }))} 
-                        required 
-                      />
-                      <Input 
-                        placeholder="Admission Fee" 
-                        type="number" 
-                        value={formData.admission_fee} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, admission_fee: parseInt(e.target.value) || 0 }))} 
-                        required 
-                      />
-                      <Input 
-                        placeholder="Installment Count" 
-                        type="number" 
-                        value={formData.installment_count} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, installment_count: parseInt(e.target.value) || 0 }))} 
-                        required 
-                      />
-                      <Input 
-                        placeholder="Discount Percentage" 
-                        type="number" 
-                        value={formData.discount_percentage} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))} 
-                      />
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Total Course Fee (BDT) *</label>
+                        <Input 
+                          placeholder="e.g., 50000, 75000, 100000" 
+                          type="number" 
+                          min="1"
+                          step="1"
+                          value={formData.total_fee} 
+                          onChange={(e) => setFormData(prev => ({ ...prev, total_fee: parseInt(e.target.value) || 0 }))} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Admission Fee (BDT) *</label>
+                        <Input 
+                          placeholder="e.g., 10000, 15000, 20000" 
+                          type="number" 
+                          min="1"
+                          step="1"
+                          value={formData.admission_fee} 
+                          onChange={(e) => setFormData(prev => ({ ...prev, admission_fee: parseInt(e.target.value) || 0 }))} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Number of Installments *</label>
+                        <Input 
+                          placeholder="e.g., 3, 6, 12" 
+                          type="number" 
+                          min="1"
+                          value={formData.installment_count} 
+                          onChange={(e) => setFormData(prev => ({ ...prev, installment_count: parseInt(e.target.value) || 0 }))} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Discount Percentage (%)</label>
+                        <Input 
+                          placeholder="e.g., 10, 15, 20" 
+                          type="number" 
+                          min="0"
+                          value={formData.discount_percentage} 
+                          onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: parseFloat(e.target.value) || 0 }))} 
+                        />
+                      </div>
                     </div>
                   </div>
 
                   {/* Course Settings */}
                   <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Course Settings</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-purple-600" />
+                      Course Settings
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input 
-                        placeholder="Batch Size Limit" 
-                        type="number" 
-                        value={formData.batch_size_limit} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, batch_size_limit: parseInt(e.target.value) || 0 }))} 
-                        required 
-                      />
-                      <Select value={formData.branch_id} onValueChange={(value) => setFormData(prev => ({ ...prev, branch_id: value }))} required>
-                        <SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger>
-                        <SelectContent>
-                          {branches.map(branch => (
-                            <SelectItem key={branch.id} value={branch.id.toString()}>
-                              {branch.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={formData.is_active ? "active" : "inactive"} onValueChange={(value) => setFormData(prev => ({ ...prev, is_active: value === "active" }))}>
-                        <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Maximum Batch Size *</label>
+                        <Input 
+                          placeholder="e.g., 20, 30, 50" 
+                          type="number" 
+                          min="1"
+                          value={formData.batch_size_limit} 
+                          onChange={(e) => setFormData(prev => ({ ...prev, batch_size_limit: parseInt(e.target.value) || 0 }))} 
+                          required 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Branch Location *</label>
+                                                  <Select value={formData.branch_id} onValueChange={(value) => setFormData(prev => ({ ...prev, branch_id: value }))} required>
+                            <SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger>
+                            <SelectContent>
+                              {branches.map(branch => (
+                                <SelectItem key={branch.id} value={branch.id.toString()}>
+                                  {branch.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Course Status *</label>
+                                                  <Select value={formData.is_active ? "active" : "inactive"} onValueChange={(value) => setFormData(prev => ({ ...prev, is_active: value === "active" }))}>
+                            <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="active">Active</SelectItem>
+                              <SelectItem value="inactive">Inactive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-                    <Button type="submit">Update Course</Button>
+                  <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsEditDialogOpen(false)}
+                      className="px-6 py-2"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit"
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Update Course
+                    </Button>
                   </div>
                 </form>
               </DialogContent>

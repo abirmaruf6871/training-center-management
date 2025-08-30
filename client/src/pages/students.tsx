@@ -250,30 +250,30 @@ export default function Students() {
 
   if (loading && students.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
         <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
-        <p className="ml-4 text-gray-600">Loading students...</p>
+        <p className="ml-4 text-gray-600 dark:text-gray-400">Loading students...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
         <p className="text-red-600 text-lg">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
       <TopNav />
       <div className="flex pt-16">
         <Sidebar />
         <main className="flex-1 p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Student Management</h1>
-            <p className="text-sm text-gray-600">Manage students and track progress</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Student Management</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Manage students and track progress</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -329,7 +329,7 @@ export default function Students() {
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-end">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Search Students</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search Students</label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                     <Input
@@ -348,8 +348,8 @@ export default function Students() {
                     <DialogHeader><DialogTitle>Add New Student</DialogTitle></DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-6">
                       {/* Personal Information */}
-                      <div className="bg-gray-50 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Personal Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Input placeholder="First Name" value={formData.first_name} onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))} required />
                           <Input placeholder="Last Name" value={formData.last_name} onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))} required />
