@@ -58,3 +58,4 @@ class Faculty extends Model
     }
 }
 
+

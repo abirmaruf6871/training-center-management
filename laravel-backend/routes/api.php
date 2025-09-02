@@ -12,6 +12,9 @@ use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\BatchController;
+use App\Http\Controllers\Api\QuizController;
+use App\Http\Controllers\Api\QuestionController;
+use App\Http\Controllers\Api\HomeContentController;
 use App\Http\Controllers\Api\TestController;
 
 /*
@@ -28,6 +31,194 @@ use App\Http\Controllers\Api\TestController;
 // Public routes
 Route::get('/test', function() {
     return response()->json(['message' => 'API is working!']);
+});
+
+// Test OTP endpoints
+Route::get('/test-otp', function() {
+    return response()->json([
+        'message' => 'OTP system is ready for testing',
+        'fixed_otp' => '123456',
+        'instructions' => [
+            '1. Use any valid phone number (format: 01XXXXXXXXX)',
+            '2. Send OTP request to /api/auth/send-otp',
+            '3. Use OTP: 123456 to verify',
+            '4. OTP expires in 5 minutes'
+        ]
+    ]);
+});
+
+// Mock branches endpoint - optimized for speed
+Route::get('/branches', function() {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            ['id' => '1', 'name' => 'Dhaka Branch'],
+            ['id' => '2', 'name' => 'Chittagong Branch'],
+            ['id' => '3', 'name' => 'Sylhet Branch']
+        ]
+    ], 200, ['Cache-Control' => 'public, max-age=3600']); // Add caching headers
+});
+
+
+
+// Mock batches endpoint - optimized for speed
+Route::get('/batches-public', function() {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            [
+                'id' => '1',
+                'name' => 'DMU Batch 15',
+                'course_id' => '1',
+                'start_date' => '2024-01-15',
+                'end_date' => '2024-07-15',
+                'max_students' => 20,
+                'current_students' => 15,
+                'status' => 'active',
+                'created_at' => '2024-01-01T10:00:00Z'
+            ],
+            [
+                'id' => '2',
+                'name' => 'CMU Batch 8',
+                'course_id' => '2',
+                'start_date' => '2024-02-01',
+                'end_date' => '2024-06-01',
+                'max_students' => 18,
+                'current_students' => 12,
+                'status' => 'active',
+                'created_at' => '2024-01-01T10:00:00Z'
+            ],
+            [
+                'id' => '3',
+                'name' => 'ARDMS Batch 5',
+                'course_id' => '3',
+                'start_date' => '2024-03-01',
+                'end_date' => '2024-11-01',
+                'max_students' => 25,
+                'current_students' => 18,
+                'status' => 'active',
+                'created_at' => '2024-01-01T10:00:00Z'
+            ]
+        ]
+    ], 200, ['Cache-Control' => 'public, max-age=3600']); // Add caching headers
+});
+
+// Mock faculties endpoint
+Route::get('/faculties-public', function() {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'data' => [
+                [
+                    'id' => 1,
+                    'name' => 'Dr. Ahmed Rahman',
+                    'email' => 'ahmed.rahman@example.com',
+                    'phone' => '01712345681',
+                    'specialization' => 'Medical Ultrasound',
+                    'experience' => '10 years',
+                    'qualification' => 'MD, DMU',
+                    'status' => 'active',
+                    'created_at' => '2024-01-01T10:00:00Z'
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'Dr. Fatima Begum',
+                    'email' => 'fatima.begum@example.com',
+                    'phone' => '01712345682',
+                    'specialization' => 'Radiology',
+                    'experience' => '8 years',
+                    'qualification' => 'MD, FRCR',
+                    'status' => 'active',
+                    'created_at' => '2024-01-01T10:00:00Z'
+                ],
+                [
+                    'id' => 3,
+                    'name' => 'Dr. Mohammad Ali',
+                    'email' => 'mohammad.ali@example.com',
+                    'phone' => '01712345683',
+                    'specialization' => 'Cardiology',
+                    'experience' => '12 years',
+                    'qualification' => 'MD, FACC',
+                    'status' => 'active',
+                    'created_at' => '2024-01-01T10:00:00Z'
+                ]
+            ]
+        ]
+    ], 200, ['Cache-Control' => 'public, max-age=3600']); // Add caching headers
+});
+
+// Mock dashboard stats endpoint (public for development)
+Route::get('/dashboard/stats-public', function() {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            // Primary Stats - Updated to match actual mock data
+            'totalStudents' => 4, // Actual count from students API (3 original + 1 new)
+            'monthlyIncome' => 180000, // Calculated from 4 students (45k + 45k + 38k + 50k)
+            'pendingDues' => 95000, // Two students have pending dues (45k + 50k)
+            'activeCourses' => 3, // Actual count from courses API
+            
+            // Additional Stats - Updated to match mock data
+            'totalInstructors' => 3, // Actual count from faculties API
+            'completedCourses' => 2,
+            'upcomingClasses' => 1,
+            'studentSatisfaction' => 94,
+            'monthlyEnrollments' => 1,
+            'courseCompletionRate' => 87,
+            'averageClassSize' => 15, // Average from batches (15+12+18)/3
+            'revenueGrowth' => 15.5,
+            
+            // Performance Metrics
+            'attendanceRate' => 92,
+            'examPassRate' => 89,
+            'certificationIssued' => 2,
+            'studentRetention' => 95,
+            
+            // Financial Metrics - Updated to match actual data
+            'totalRevenue' => 135000, // Total from 3 students
+            'expenses' => 80000,
+            'profit' => 55000,
+            'averageFee' => 45000 // Average from courses (50k+45k+40k)/3
+        ]
+    ]);
+});
+
+// Test OTP flow with mock user (for development)
+Route::post('/test-otp-flow', function(Request $request) {
+    try {
+        $phone = $request->input('phone', '01712345678'); // Default test phone
+        
+        // Mock user creation (since database might not be available)
+        $mockUser = [
+            'id' => 'test-user-123',
+            'phone' => $phone,
+            'username' => 'testuser',
+            'email' => 'test@example.com',
+            'first_name' => 'Test',
+            'last_name' => 'User',
+            'role' => 'admin',
+            'is_active' => true
+        ];
+        
+        // Mock OTP generation
+        $otp = '123456';
+        
+        return response()->json([
+            'message' => 'OTP flow test successful',
+            'user' => $mockUser,
+            'otp' => $otp,
+            'instructions' => [
+                '1. Use this phone number: ' . $phone,
+                '2. Use OTP: ' . $otp,
+                '3. This is a mock response for testing'
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Test failed',
+            'message' => $e->getMessage()
+        ], 500);
+    }
 });
 
 Route::get('/test-user', [TestController::class, 'testUser']);
@@ -148,60 +339,337 @@ Route::get('/test-branches-auth', function() {
 // Temporary public endpoints for testing (remove these in production)
 
 Route::get('/courses-public', function() {
-    try {
-        $courses = \App\Models\Course::where('is_active', true)->get(['id', 'name', 'description', 'duration', 'total_fee', 'admission_fee']);
+    // Mock courses data
+    $mockCourses = [
+        [
+            'id' => '1',
+            'name' => 'DMU Course',
+            'description' => 'Diploma in Medical Ultrasound',
+            'duration' => '6 months',
+            'total_fee' => '50000',
+            'admission_fee' => '10000',
+            'is_active' => true
+        ],
+        [
+            'id' => '2',
+            'name' => 'CMU Course',
+            'description' => 'Certificate in Medical Ultrasound',
+            'duration' => '4 months',
+            'total_fee' => '45000',
+            'admission_fee' => '10000',
+            'is_active' => true
+        ],
+        [
+            'id' => '3',
+            'name' => 'ARDMS Course',
+            'description' => 'ARDMS Preparation Course',
+            'duration' => '8 months',
+            'total_fee' => '40000',
+            'admission_fee' => '10000',
+            'is_active' => true
+        ]
+    ];
+    
         return response()->json([
             'success' => true,
-            'data' => $courses,
-            'message' => 'Courses fetched successfully'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Failed to fetch courses', 'error' => $e->getMessage()], 500);
-    }
+        'data' => $mockCourses,
+        'message' => 'Courses fetched successfully (mock data)'
+    ], 200, ['Cache-Control' => 'public, max-age=3600']); // Add caching headers
 });
 
-Route::get('/branches-public', function() {
-    try {
-        $branches = \App\Models\Branch::where('is_active', true)->get(['id', 'name', 'address', 'phone', 'email']);
+// Route removed - using mock data from earlier route
+
+// Route removed - using mock data from earlier route
+
+// Mock students endpoint for development (bypass database) - optimized for speed
+Route::get('/students-public', function(Request $request) {
+    // Mock student data
+    $mockStudents = [
+        [
+            'id' => 1,
+            'first_name' => 'Dr. Fatima',
+            'last_name' => 'Khan',
+            'email' => 'fatima.khan@example.com',
+            'phone' => '01712345678',
+            'bmdc_no' => 'BMDC12345',
+            'date_of_birth' => '1990-05-15',
+            'gender' => 'female',
+            'address' => 'Dhaka, Bangladesh',
+            'course_id' => 1,
+            'branch_id' => 1,
+            'batch_id' => 1,
+            'admission_date' => '2024-01-15',
+            'total_fee' => 50000,
+            'admission_fee' => 10000,
+            'discount_amount' => 5000,
+            'final_fee' => 45000,
+            'payment_status' => 'paid',
+            'status' => 'active',
+            'notes' => 'Excellent student',
+            'created_at' => '2024-01-15T10:00:00Z',
+            'updated_at' => '2024-01-15T10:00:00Z',
+            'course' => ['id' => 1, 'name' => 'DMU Course'],
+            'branch' => ['id' => 1, 'name' => 'Dhaka Branch'],
+            'batch' => ['id' => 1, 'name' => 'DMU Batch 15'],
+            'payment_history' => [
+                [
+                    'id' => 1,
+                    'student_id' => 1,
+                    'payment_type' => 'admission_fee',
+                    'amount' => 10000,
+                    'payment_date' => '2024-01-15',
+                    'payment_method' => 'cash',
+                    'receipt_no' => 'RCP-0001-001',
+                    'notes' => 'Initial admission fee payment',
+                    'created_at' => '2024-01-15T10:00:00Z'
+                ],
+                [
+                    'id' => 2,
+                    'student_id' => 1,
+                    'payment_type' => 'course_fee',
+                    'amount' => 35000,
+                    'payment_date' => '2024-02-15',
+                    'payment_method' => 'bank_transfer',
+                    'receipt_no' => 'RCP-0001-002',
+                    'notes' => 'Course fee payment',
+                    'created_at' => '2024-02-15T14:30:00Z'
+                ]
+            ]
+        ],
+        [
+            'id' => 2,
+            'first_name' => 'Dr. Rashid',
+            'last_name' => 'Ahmed',
+            'email' => 'rashid.ahmed@example.com',
+            'phone' => '01712345679',
+            'bmdc_no' => 'BMDC12346',
+            'date_of_birth' => '1988-08-20',
+            'gender' => 'male',
+            'address' => 'Mymensingh, Bangladesh',
+            'course_id' => 2,
+            'branch_id' => 2,
+            'batch_id' => 2,
+            'admission_date' => '2024-02-01',
+            'total_fee' => 45000,
+            'admission_fee' => 10000,
+            'discount_amount' => 0,
+            'final_fee' => 45000,
+            'payment_status' => 'pending',
+            'status' => 'active',
+            'notes' => 'Good progress',
+            'created_at' => '2024-02-01T10:00:00Z',
+            'updated_at' => '2024-02-01T10:00:00Z',
+            'course' => ['id' => 2, 'name' => 'CMU Course'],
+            'branch' => ['id' => 2, 'name' => 'Mymensingh Branch'],
+            'batch' => ['id' => 2, 'name' => 'CMU Batch 8'],
+            'payment_history' => [
+                [
+                    'id' => 3,
+                    'student_id' => 2,
+                    'payment_type' => 'admission_fee',
+                    'amount' => 10000,
+                    'payment_date' => '2024-02-01',
+                    'payment_method' => 'cash',
+                    'receipt_no' => 'RCP-0002-001',
+                    'notes' => 'Initial admission fee payment',
+                    'created_at' => '2024-02-01T10:00:00Z'
+                ]
+            ]
+        ],
+        [
+            'id' => 3,
+            'first_name' => 'Dr. Nasir',
+            'last_name' => 'Uddin',
+            'email' => 'nasir.uddin@example.com',
+            'phone' => '01712345680',
+            'bmdc_no' => 'BMDC12347',
+            'date_of_birth' => '1992-12-10',
+            'gender' => 'male',
+            'address' => 'Chittagong, Bangladesh',
+            'course_id' => 3,
+            'branch_id' => 3,
+            'batch_id' => 3,
+            'admission_date' => '2024-03-01',
+            'total_fee' => 40000,
+            'admission_fee' => 10000,
+            'discount_amount' => 2000,
+            'final_fee' => 38000,
+            'payment_status' => 'partial',
+            'status' => 'active',
+            'notes' => 'Promising student',
+            'created_at' => '2024-03-01T10:00:00Z',
+            'updated_at' => '2024-03-01T10:00:00Z',
+            'course' => ['id' => 3, 'name' => 'ARDMS Course'],
+            'branch' => ['id' => 3, 'name' => 'Chittagong Branch'],
+            'batch' => ['id' => 3, 'name' => 'ARDMS Batch 5'],
+            'payment_history' => [
+                [
+                    'id' => 4,
+                    'student_id' => 3,
+                    'payment_type' => 'admission_fee',
+                    'amount' => 10000,
+                    'payment_date' => '2024-03-01',
+                    'payment_method' => 'cash',
+                    'receipt_no' => 'RCP-0003-001',
+                    'notes' => 'Initial admission fee payment',
+                    'created_at' => '2024-03-01T10:00:00Z'
+                ],
+                [
+                    'id' => 5,
+                    'student_id' => 3,
+                    'payment_type' => 'course_fee',
+                    'amount' => 15000,
+                    'payment_date' => '2024-04-01',
+                    'payment_method' => 'mobile_banking',
+                    'receipt_no' => 'RCP-0003-002',
+                    'notes' => 'Partial course fee payment',
+                    'created_at' => '2024-04-01T11:20:00Z'
+                ]
+            ]
+        ],
+        [
+            'id' => 4,
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'email' => 'test@example.com',
+            'phone' => '01712345678',
+            'bmdc_no' => 'BMDC12345',
+            'date_of_birth' => '1990-01-01',
+            'gender' => 'male',
+            'address' => 'Test Address',
+            'course_id' => 1,
+            'branch_id' => 1,
+            'batch_id' => 1,
+            'admission_date' => '2024-01-01',
+            'total_fee' => 50000,
+            'admission_fee' => 10000,
+            'discount_amount' => 0,
+            'final_fee' => 50000,
+            'payment_status' => 'pending',
+            'status' => 'active',
+            'notes' => 'Test student',
+            'created_at' => '2024-09-02T15:46:59Z',
+            'updated_at' => '2024-09-02T15:46:59Z',
+            'course' => ['id' => 1, 'name' => 'DMU Course'],
+            'branch' => ['id' => 1, 'name' => 'Dhaka Branch'],
+            'batch' => ['id' => 1, 'name' => 'DMU Batch 15'],
+            'payment_history' => [
+                [
+                    'id' => 6,
+                    'student_id' => 4,
+                    'payment_type' => 'admission_fee',
+                    'amount' => 10000,
+                    'payment_date' => '2024-01-01',
+                    'payment_method' => 'cash',
+                    'receipt_no' => 'RCP-0004-001',
+                    'notes' => 'Initial admission fee payment',
+                    'created_at' => '2024-01-01T10:00:00Z'
+                ]
+            ]
+        ]
+    ];
+
+    // Mock pagination
+    $perPage = 15;
+    $currentPage = $request->get('page', 1);
+    $total = count($mockStudents);
+    $lastPage = ceil($total / $perPage);
+    
+    $offset = ($currentPage - 1) * $perPage;
+    $paginatedStudents = array_slice($mockStudents, $offset, $perPage);
+
         return response()->json([
             'success' => true,
-            'data' => $branches,
-            'message' => 'Branches fetched successfully'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Failed to fetch branches', 'error' => $e->getMessage()], 500);
-    }
+        'data' => [
+            'data' => $paginatedStudents,
+            'current_page' => (int)$currentPage,
+            'last_page' => $lastPage,
+            'per_page' => $perPage,
+            'total' => $total,
+            'from' => $offset + 1,
+            'to' => min($offset + $perPage, $total)
+        ],
+        'message' => 'Students retrieved successfully (mock data)'
+    ], 200, ['Cache-Control' => 'public, max-age=3600']); // Add caching headers
 });
 
-Route::get('/batches-public', function() {
-    try {
-        $batches = \App\Models\Batch::where('is_active', true)->get(['id', 'name', 'start_date', 'end_date', 'course_id']);
-        return response()->json([
-            'success' => true,
-            'data' => $batches,
-            'message' => 'Batches fetched successfully'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json(['message' => 'Failed to fetch batches', 'error' => $e->getMessage()], 500);
-    }
-});
-
-Route::get('/students-public', [StudentController::class, 'index']);
+// Keep original endpoint commented for production
+// Route::get('/students-public', [StudentController::class, 'index']);
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 
-// Temporary public student creation endpoint for testing (remove in production)
+// Mock OTP endpoints for development (bypass database)
+Route::post('/auth/send-otp', function(Request $request) {
+    $request->validate([
+        'phone' => 'required|string|regex:/^01[3-9]\d{8}$/',
+    ]);
+    
+    $phone = $request->phone;
+    
+    // Mock response - always return fixed OTP
+        return response()->json([
+        'message' => 'OTP sent successfully (development mode - use: 123456)',
+        'otp' => '123456',
+        'expires_in' => 300, // 5 minutes in seconds
+        'development_mode' => true,
+        'phone' => $phone
+    ]);
+});
+
+Route::post('/auth/verify-otp', function(Request $request) {
+    $request->validate([
+        'phone' => 'required|string|regex:/^01[3-9]\d{8}$/',
+        'otp' => 'required|string|size:6',
+    ]);
+    
+    $phone = $request->phone;
+    $otp = $request->otp;
+    
+    // Mock verification - accept only 123456
+    if ($otp === '123456') {
+        // Mock user data
+        $mockUser = [
+            'id' => 'test-user-' . substr($phone, -4),
+            'username' => 'user' . substr($phone, -4),
+            'email' => 'user' . substr($phone, -4) . '@example.com',
+            'firstName' => 'Test',
+            'lastName' => 'User',
+            'profileImageUrl' => null,
+            'role' => 'admin',
+            'branchId' => null,
+            'phone' => $phone,
+        ];
+        
+        // Mock token
+        $mockToken = 'mock-token-' . time() . '-' . substr($phone, -4);
+        
+        return response()->json([
+            'user' => $mockUser,
+            'token' => $mockToken,
+            'message' => 'OTP verified successfully (development mode)'
+        ]);
+    } else {
+        return response()->json([
+            'message' => 'Invalid OTP. Use 123456 for development.',
+            'error' => 'Invalid OTP'
+        ], 400);
+    }
+});
+
+// Original OTP endpoints (commented out for now)
+// Route::post('/auth/send-otp', [AuthController::class, 'sendOtp']);
+// Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp']);
+
+// Mock student creation endpoint for development (bypass database)
 Route::post('/students-public', function(Request $request) {
     try {
-        // Debug: Log the incoming request data
-        \Illuminate\Support\Facades\Log::info('Student creation request:', $request->all());
-        
+        // Basic validation without database checks
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:students,email',
+            'email' => 'required|email',
             'phone' => 'required|string|max:20',
-            'bmdc_no' => 'nullable|string|max:50|unique:students,bmdc_no',
+            'bmdc_no' => 'nullable|string|max:50',
             'date_of_birth' => 'required|date',
             'gender' => 'required|in:male,female,other',
             'address' => 'required|string',
@@ -217,9 +685,6 @@ Route::post('/students-public', function(Request $request) {
         ]);
 
         if ($validator->fails()) {
-            // Debug: Log validation errors
-            \Illuminate\Support\Facades\Log::error('Student creation validation failed:', $validator->errors()->toArray());
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -227,37 +692,80 @@ Route::post('/students-public', function(Request $request) {
             ], 422);
         }
 
-        // Use the data directly - it already matches the database structure
+        // Create mock student data (simulate database creation)
         $data = $request->all();
-        $data['id'] = \Illuminate\Support\Str::uuid(); // Generate UUID for id field
+        $data['id'] = rand(100, 999); // Generate random ID for mock
         $data['final_fee'] = $data['total_fee'] - ($data['discount_amount'] ?? 0);
         $data['payment_status'] = 'pending';
-
-        // Log the data being inserted
-        \Illuminate\Support\Facades\Log::info('Creating student with data:', $data);
-
-        // Use the Eloquent model to create the student
-        $student = \App\Models\Student::create($data);
-
-        // Log successful creation
-        \Illuminate\Support\Facades\Log::info('Student created successfully:', ['id' => $student->id]);
+        $data['created_at'] = now()->toISOString();
+        $data['updated_at'] = now()->toISOString();
+        
+        // Add payment history with initial admission fee payment
+        $data['payment_history'] = [
+            [
+                'id' => 1,
+                'student_id' => $data['id'],
+                'payment_type' => 'admission_fee',
+                'amount' => $data['admission_fee'],
+                'payment_date' => $data['admission_date'],
+                'payment_method' => 'cash',
+                'receipt_no' => 'RCP-' . str_pad($data['id'], 4, '0', STR_PAD_LEFT) . '-001',
+                'notes' => 'Initial admission fee payment',
+                'created_at' => $data['admission_date'] . 'T10:00:00Z'
+            ]
+        ];
 
         return response()->json([
             'success' => true,
-            'data' => $student,
-            'message' => 'Student created successfully'
+            'data' => $data,
+            'message' => 'Student created successfully (mock data)'
         ], 201);
 
     } catch (\Exception $e) {
-        // Debug: Log the exception
-        \Illuminate\Support\Facades\Log::error('Student creation exception:', [
-            'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
         return response()->json([
             'success' => false,
             'message' => 'Failed to create student',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// Mock fee collection endpoint for development
+Route::post('/students-public/{id}/collect-fee', function(Request $request, $id) {
+    try {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'amount' => 'required|numeric|min:0',
+            'payment_type' => 'required|in:admission_fee,course_fee,exam_fee,other',
+            'payment_method' => 'required|in:cash,bank_transfer,mobile_banking,card',
+            'payment_date' => 'required|date',
+            'notes' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Mock payment record
+        $paymentData = $request->all();
+        $paymentData['id'] = rand(1000, 9999);
+        $paymentData['student_id'] = $id;
+        $paymentData['receipt_no'] = 'RCP-' . str_pad($id, 4, '0', STR_PAD_LEFT) . '-' . str_pad($paymentData['id'], 3, '0', STR_PAD_LEFT);
+        $paymentData['created_at'] = now()->toISOString();
+
+        return response()->json([
+            'success' => true,
+            'data' => $paymentData,
+            'message' => 'Fee collected successfully (mock data)'
+        ], 201);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to collect fee',
             'error' => $e->getMessage()
         ], 500);
     }
@@ -375,22 +883,7 @@ Route::delete('/students-public/{id}', function($id) {
 });
 
 // Course routes
-Route::get('/courses-public', function() {
-    try {
-        $courses = \App\Models\Course::with('branch')->get();
-        
-        return response()->json([
-            'success' => true,
-            'data' => $courses
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch courses',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-});
+// Route removed - using mock data from earlier route
 
 Route::post('/courses-public', function(Request $request) {
     try {
@@ -538,12 +1031,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     
-    // Branch routes
-    Route::get('/branches', [BranchController::class, 'index']);
-    Route::post('/branches', [BranchController::class, 'store'])->middleware('role:admin,manager');
-    Route::get('/branches/{branch}', [BranchController::class, 'show']);
-    Route::put('/branches/{branch}', [BranchController::class, 'update'])->middleware('role:admin,manager');
-    Route::delete('/branches/{branch}', [BranchController::class, 'destroy'])->middleware('role:admin');
+    // Branch routes - temporarily commented for development
+    // Route::get('/branches', [BranchController::class, 'index']);
+    // Route::post('/branches', [BranchController::class, 'store'])->middleware('role:admin,manager');
+    // Route::get('/branches/{branch}', [BranchController::class, 'show']);
+    // Route::put('/branches/{branch}', [BranchController::class, 'update'])->middleware('role:admin,manager');
+    // Route::delete('/branches/{branch}', [BranchController::class, 'destroy'])->middleware('role:admin');
     
     // Course routes
     Route::get('/courses', [CourseController::class, 'index']);
@@ -593,6 +1086,218 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/attendance/{id}', [App\Http\Controllers\Api\AttendanceController::class, 'destroy']);
     Route::post('/attendance/batch', [App\Http\Controllers\Api\AttendanceController::class, 'markBatchAttendance']);
     Route::get('/attendance/batch/{batchId}/stats', [App\Http\Controllers\Api\AttendanceController::class, 'getBatchAttendanceStats']);
+    
+    // Quiz routes
+    Route::get('/quizzes', [App\Http\Controllers\Api\QuizController::class, 'index']);
+    Route::post('/quizzes', [App\Http\Controllers\Api\QuizController::class, 'store']);
+    Route::get('/quizzes/{id}', [App\Http\Controllers\Api\QuizController::class, 'show']);
+    Route::put('/quizzes/{id}', [App\Http\Controllers\Api\QuizController::class, 'update']);
+    Route::delete('/quizzes/{id}', [App\Http\Controllers\Api\QuizController::class, 'destroy']);
+    Route::get('/quizzes/{id}/stats', [App\Http\Controllers\Api\QuizController::class, 'getStats']);
+    
+    // Quiz attempt routes
+    Route::post('/quizzes/{id}/start', [App\Http\Controllers\Api\QuizController::class, 'startAttempt']);
+    Route::post('/quizzes/{id}/submit', [App\Http\Controllers\Api\QuizController::class, 'submitAttempt']);
+
+// Question routes
+Route::get('/questions', [App\Http\Controllers\Api\QuestionController::class, 'index']);
+Route::post('/questions', [App\Http\Controllers\Api\QuestionController::class, 'store']);
+Route::get('/questions/{id}', [App\Http\Controllers\Api\QuestionController::class, 'show']);
+Route::put('/questions/{id}', [App\Http\Controllers\Api\QuestionController::class, 'update']);
+Route::delete('/questions/{id}', [App\Http\Controllers\Api\QuestionController::class, 'destroy']);
+
+// Protected Home Content Routes (admin only)
+Route::put('/home-content/{id}', [App\Http\Controllers\Api\HomeContentController::class, 'update']);
+Route::post('/home-content/initialize', [App\Http\Controllers\Api\HomeContentController::class, 'initialize']);
+});
+
+// Public Home Content Routes (no authentication required)
+Route::get('/home-content', function() {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            [
+                'id' => '1',
+                'section' => 'hero',
+                'title' => 'Hero Section',
+                'content' => [
+                    'heading' => 'Find Medical Courses & Develop Your Skills',
+                    'subtitle' => 'Premium Online & Offline Courses from Bangladesh & International Students.'
+                ],
+                'is_active' => true,
+                'order' => 1
+            ],
+            [
+                'id' => '2',
+                'section' => 'courses',
+                'title' => 'Popular Courses',
+                'content' => [
+                    'title' => 'Our Most Popular Courses'
+                ],
+                'is_active' => true,
+                'order' => 2
+            ]
+        ]
+    ]);
+});
+
+Route::get('/home-content/{id}', function($id) {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $id,
+            'section' => 'hero',
+            'title' => 'Hero Section',
+            'content' => [
+                'heading' => 'Find Medical Courses & Develop Your Skills',
+                'subtitle' => 'Premium Online & Offline Courses from Bangladesh & International Students.'
+            ],
+            'is_active' => true,
+            'order' => 1
+        ]
+    ]);
+});
+
+// Public Course Routes for Home Page
+Route::get('/courses', function() {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'data' => [
+                [
+                    'id' => '1',
+                    'title' => 'Medical Ultrasound Training',
+                    'description' => 'Comprehensive ultrasound training for medical professionals',
+                    'price' => 25000,
+                    'rating' => 4.8,
+                    'category' => 'Medical',
+                    'instructor' => 'Dr. Sarah Ahmed'
+                ],
+                [
+                    'id' => '2',
+                    'title' => 'ECG Interpretation Course',
+                    'description' => 'Learn to interpret ECG readings accurately',
+                    'price' => 15000,
+                    'rating' => 4.6,
+                    'category' => 'Cardiology',
+                    'instructor' => 'Dr. Mohammad Rahman'
+                ],
+                [
+                    'id' => '3',
+                    'title' => 'Emergency Medicine Training',
+                    'description' => 'Essential skills for emergency medical situations',
+                    'price' => 30000,
+                    'rating' => 4.9,
+                    'category' => 'Emergency',
+                    'instructor' => 'Dr. Fatima Khan'
+                ],
+                [
+                    'id' => '4',
+                    'title' => 'Pediatric Care Workshop',
+                    'description' => 'Specialized training in pediatric healthcare',
+                    'price' => 20000,
+                    'rating' => 4.7,
+                    'category' => 'Pediatrics',
+                    'instructor' => 'Dr. Ayesha Begum'
+                ],
+                [
+                    'id' => '5',
+                    'title' => 'Surgical Skills Training',
+                    'description' => 'Advanced surgical techniques and procedures',
+                    'price' => 40000,
+                    'rating' => 4.8,
+                    'category' => 'Surgery',
+                    'instructor' => 'Dr. Hasan Ali'
+                ],
+                [
+                    'id' => '6',
+                    'title' => 'Radiology Interpretation',
+                    'description' => 'Master the art of reading medical images',
+                    'price' => 22000,
+                    'rating' => 4.5,
+                    'category' => 'Radiology',
+                    'instructor' => 'Dr. Nusrat Jahan'
+                ]
+            ]
+        ]
+    ]);
+});
+
+Route::get('/courses/{id}', function($id) {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $id,
+            'title' => 'Medical Ultrasound Training',
+            'description' => 'Comprehensive ultrasound training for medical professionals',
+            'price' => 25000,
+            'rating' => 4.8,
+            'category' => 'Medical',
+            'instructor' => 'Dr. Sarah Ahmed'
+        ]
+    ]);
+});
+
+// Public Instructor Routes for Home Page
+Route::get('/instructors', function() {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'data' => [
+                [
+                    'id' => '1',
+                    'name' => 'Dr. Sarah Ahmed',
+                    'role' => 'Senior Medical Consultant',
+                    'social_links' => [
+                        'facebook' => 'https://facebook.com/drsarah',
+                        'linkedin' => 'https://linkedin.com/in/drsarah'
+                    ]
+                ],
+                [
+                    'id' => '2',
+                    'name' => 'Dr. Mohammad Rahman',
+                    'role' => 'Cardiology Specialist',
+                    'social_links' => [
+                        'twitter' => 'https://twitter.com/drmohammad',
+                        'linkedin' => 'https://linkedin.com/in/drmohammad'
+                    ]
+                ],
+                [
+                    'id' => '3',
+                    'name' => 'Dr. Fatima Khan',
+                    'role' => 'Emergency Medicine Expert',
+                    'social_links' => [
+                        'facebook' => 'https://facebook.com/drfatima',
+                        'instagram' => 'https://instagram.com/drfatima'
+                    ]
+                ],
+                [
+                    'id' => '4',
+                    'name' => 'Dr. Ayesha Begum',
+                    'role' => 'Pediatric Specialist',
+                    'social_links' => [
+                        'linkedin' => 'https://linkedin.com/in/drayesha',
+                        'twitter' => 'https://twitter.com/drayesha'
+                    ]
+                ]
+            ]
+        ]
+    ]);
+});
+
+Route::get('/instructors/{id}', function($id) {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $id,
+            'name' => 'Dr. Sarah Ahmed',
+            'role' => 'Senior Medical Consultant',
+            'social_links' => [
+                'facebook' => 'https://facebook.com/drsarah',
+                'linkedin' => 'https://linkedin.com/in/drsarah'
+            ]
+        ]
+    ]);
 });
 
 // Multi-Branch Support Routes

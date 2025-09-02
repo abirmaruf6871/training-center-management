@@ -51,3 +51,4 @@ UPDATE users SET branch_id = 'branch-001' WHERE username = 'admin';
 SELECT id, username, email, role, is_active FROM users WHERE username = 'admin';
 
 
+

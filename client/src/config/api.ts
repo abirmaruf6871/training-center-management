@@ -15,7 +15,7 @@ export const API_CONFIG = {
     BRANCHES: '/branches-public', // Using public endpoint temporarily
     BATCHES: '/batches-public', // Using public endpoint temporarily
     PAYMENTS: '/payments',
-    DASHBOARD: '/dashboard/stats',
+    DASHBOARD: '/dashboard/stats-public',
   },
   
   // Request timeout (in milliseconds)

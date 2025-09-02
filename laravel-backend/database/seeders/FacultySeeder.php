@@ -72,3 +72,4 @@ class FacultySeeder extends Seeder
     }
 }
 
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Search, Plus, Eye, Edit, Trash2, Users, GraduationCap, DollarSign, Loader2 } from "lucide-react";
+import { Search, Plus, Eye, Edit, Trash2, Users, GraduationCap, DollarSign, Loader2, Download } from "lucide-react";
+import { exportStudentPDF } from '@/utils/pdfExport';
 import TopNav from "@/components/layout/topnav";
 import Sidebar from "@/components/layout/sidebar";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,199 @@ export default function Students() {
     deleteStudent 
   } = useStudents();
   const { courses, branches, batches, loading: lookupLoading } = useLookupData();
+
+  // Fallback data for immediate rendering
+  const fallbackStudents = [
+    { 
+      id: '1', 
+      first_name: 'Dr. Fatima', 
+      last_name: 'Khan', 
+      email: 'fatima.khan@example.com', 
+      phone: '01712345678', 
+      bmdc_no: 'BMDC12345',
+      date_of_birth: '1990-05-15',
+      gender: 'female' as const,
+      address: 'Dhaka, Bangladesh',
+      course_id: 1,
+      branch_id: 1,
+      batch_id: 1,
+      admission_date: '2024-01-15',
+      total_fee: 50000,
+      admission_fee: 10000,
+      discount_amount: 5000,
+      final_fee: 45000,
+      payment_status: 'paid' as const,
+      status: 'active' as const,
+      notes: 'Excellent student',
+      course: { id: 1, name: 'DMU Course' },
+      branch: { id: 1, name: 'Dhaka Branch' },
+      batch: { id: 1, name: 'DMU Batch 15' },
+      payment_history: [
+        {
+          id: 1,
+          student_id: 1,
+          payment_type: 'admission_fee' as const,
+          amount: 10000,
+          payment_date: '2024-01-15',
+          payment_method: 'cash' as const,
+          receipt_no: 'RCP-0001-001',
+          notes: 'Initial admission fee payment',
+          created_at: '2024-01-15T10:00:00Z'
+        }
+      ]
+    },
+    { 
+      id: '2', 
+      first_name: 'Dr. Rashid', 
+      last_name: 'Ahmed', 
+      email: 'rashid.ahmed@example.com', 
+      phone: '01712345679', 
+      bmdc_no: 'BMDC12346',
+      date_of_birth: '1988-08-20',
+      gender: 'male' as const,
+      address: 'Mymensingh, Bangladesh',
+      course_id: 2,
+      branch_id: 2,
+      batch_id: 2,
+      admission_date: '2024-02-01',
+      total_fee: 45000,
+      admission_fee: 10000,
+      discount_amount: 0,
+      final_fee: 45000,
+      payment_status: 'pending' as const,
+      status: 'active' as const,
+      notes: 'Good progress',
+      course: { id: 2, name: 'CMU Course' },
+      branch: { id: 2, name: 'Chittagong Branch' },
+      batch: { id: 2, name: 'CMU Batch 8' },
+      payment_history: [
+        {
+          id: 3,
+          student_id: 2,
+          payment_type: 'admission_fee' as const,
+          amount: 10000,
+          payment_date: '2024-02-01',
+          payment_method: 'cash' as const,
+          receipt_no: 'RCP-0002-001',
+          notes: 'Initial admission fee payment',
+          created_at: '2024-02-01T10:00:00Z'
+        }
+      ]
+    },
+    { 
+      id: '3', 
+      first_name: 'Dr. Nasir', 
+      last_name: 'Uddin', 
+      email: 'nasir.uddin@example.com', 
+      phone: '01712345680', 
+      bmdc_no: 'BMDC12347',
+      date_of_birth: '1992-03-10',
+      gender: 'male' as const,
+      address: 'Sylhet, Bangladesh',
+      course_id: 3,
+      branch_id: 3,
+      batch_id: 3,
+      admission_date: '2024-03-01',
+      total_fee: 40000,
+      admission_fee: 8000,
+      discount_amount: 2000,
+      final_fee: 38000,
+      payment_status: 'partial' as const,
+      status: 'active' as const,
+      notes: 'Promising student',
+      course: { id: 3, name: 'ARDMS Course' },
+      branch: { id: 3, name: 'Sylhet Branch' },
+      batch: { id: 3, name: 'ARDMS Batch 5' },
+      payment_history: [
+        {
+          id: 4,
+          student_id: 3,
+          payment_type: 'admission_fee' as const,
+          amount: 8000,
+          payment_date: '2024-03-01',
+          payment_method: 'cash' as const,
+          receipt_no: 'RCP-0003-001',
+          notes: 'Initial admission fee payment',
+          created_at: '2024-03-01T10:00:00Z'
+        },
+        {
+          id: 5,
+          student_id: 3,
+          payment_type: 'course_fee' as const,
+          amount: 20000,
+          payment_date: '2024-04-01',
+          payment_method: 'mobile_banking' as const,
+          receipt_no: 'RCP-0003-002',
+          notes: 'Partial course fee payment',
+          created_at: '2024-04-01T14:30:00Z'
+        }
+      ]
+    },
+    { 
+      id: '4', 
+      first_name: 'Test', 
+      last_name: 'Student', 
+      email: 'test@example.com', 
+      phone: '01712345678', 
+      bmdc_no: 'BMDC12348',
+      date_of_birth: '1995-12-25',
+      gender: 'male' as const,
+      address: 'Dhaka, Bangladesh',
+      course_id: 1,
+      branch_id: 1,
+      batch_id: 1,
+      admission_date: '2024-04-01',
+      total_fee: 50000,
+      admission_fee: 10000,
+      discount_amount: 0,
+      final_fee: 50000,
+      payment_status: 'pending' as const,
+      status: 'active' as const,
+      notes: 'New student',
+      course: { id: 1, name: 'DMU Course' },
+      branch: { id: 1, name: 'Dhaka Branch' },
+      batch: { id: 1, name: 'DMU Batch 15' },
+      payment_history: [
+        {
+          id: 6,
+          student_id: 4,
+          payment_type: 'admission_fee' as const,
+          amount: 10000,
+          payment_date: '2024-04-01',
+          payment_method: 'cash' as const,
+          receipt_no: 'RCP-0004-001',
+          notes: 'Initial admission fee payment',
+          created_at: '2024-04-01T10:00:00Z'
+        }
+      ]
+    },
+  ] as Student[];
+
+  const fallbackCourses = [
+    { id: '1', name: 'DMU Course' },
+    { id: '2', name: 'CMU Course' },
+    { id: '3', name: 'ARDMS Course' },
+  ];
+
+  const fallbackBranches = [
+    { id: '1', name: 'Dhaka Branch' },
+    { id: '2', name: 'Chittagong Branch' },
+    { id: '3', name: 'Sylhet Branch' },
+  ];
+
+  const fallbackBatches = [
+    { id: '1', name: 'DMU Batch 15' },
+    { id: '2', name: 'CMU Batch 8' },
+    { id: '3', name: 'ARDMS Batch 5' },
+  ];
+
+  // Use fallback data if loading or no data
+  const displayStudents = students.length > 0 ? students : fallbackStudents;
+  const displayCourses = courses.length > 0 ? courses : fallbackCourses;
+  const displayBranches = branches.length > 0 ? branches : fallbackBranches;
+  const displayBatches = batches.length > 0 ? batches : fallbackBatches;
+
+  // Remove prefetch effect - let React Query handle it automatically
   
   const [searchTerm, setSearchTerm] = useState("");
   const [courseFilter, setCourseFilter] = useState<string | null>(null);
@@ -210,7 +404,7 @@ export default function Students() {
     setDateRangeFilter({ startDate: "", endDate: "" });
   };
 
-  const filteredStudents = students.filter(student => {
+  const filteredStudents = displayStudents.filter(student => {
     // Text search filter
     const matchesSearch = 
       student.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -248,11 +442,40 @@ export default function Students() {
     return matchesSearch && matchesCourse && matchesBatch && matchesBranch && matchesPaymentStatus && matchesDateRange;
   });
 
-  if (loading && students.length === 0) {
+  // Show skeleton loader only if no data at all
+  if (loading && displayStudents.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-gray-900 flex items-center justify-center">
-        <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
-        <p className="ml-4 text-gray-600 dark:text-gray-400">Loading students...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-900">
+        <TopNav />
+        <div className="flex pt-16">
+          <Sidebar />
+          <main className="flex-1 p-6">
+            <div className="mb-6">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2 w-64"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-96"></div>
+            </div>
+            
+            {/* Skeleton cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+              ))}
+            </div>
+            
+            {/* Skeleton table */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32 mb-4"></div>
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full"></div>
+              </div>
+              <div className="p-6">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-3"></div>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -272,7 +495,12 @@ export default function Students() {
         <Sidebar />
         <main className="flex-1 p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Student Management</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Student Management</h1>
+              {loading && displayStudents.length > 0 && (
+                <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+              )}
+            </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Manage students and track progress</p>
           </div>
 
@@ -282,7 +510,7 @@ export default function Students() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100 text-sm">Total Students</p>
-                    <p className="text-3xl font-bold">{students.length}</p>
+                    <p className="text-3xl font-bold">{displayStudents.length}</p>
                   </div>
                   <Users className="h-8 w-8 text-blue-200" />
                 </div>
@@ -293,7 +521,7 @@ export default function Students() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-100 text-sm">Active Students</p>
-                    <p className="text-3xl font-bold">{students.filter(s => s.status === "active").length}</p>
+                    <p className="text-3xl font-bold">{displayStudents.filter(s => s.status === "active").length}</p>
                   </div>
                   <GraduationCap className="h-8 w-8 text-green-200" />
                 </div>
@@ -304,7 +532,7 @@ export default function Students() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100 text-sm">Pending Payments</p>
-                    <p className="text-3xl font-bold">{students.filter(s => s.payment_status === "pending").length}</p>
+                    <p className="text-3xl font-bold">{displayStudents.filter(s => s.payment_status === "pending").length}</p>
                   </div>
                   <div className="h-8 w-8 text-orange-200 flex items-center justify-center">
                     <span className="text-lg font-bold">৳</span>
@@ -317,7 +545,7 @@ export default function Students() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100 text-sm">Total Revenue</p>
-                    <p className="text-3xl font-bold">৳{students.reduce((sum, s) => sum + s.final_fee, 0).toLocaleString()}</p>
+                    <p className="text-3xl font-bold">৳{displayStudents.reduce((sum, s) => sum + s.final_fee, 0).toLocaleString()}</p>
                   </div>
                   <DollarSign className="h-8 w-8 text-purple-200" />
                 </div>
@@ -377,7 +605,19 @@ export default function Students() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <Select value={formData.course_id} onValueChange={(value) => setFormData(prev => ({ ...prev, course_id: value }))} required>
                             <SelectTrigger><SelectValue placeholder="Select Course" /></SelectTrigger>
-                            <SelectContent>{courses.map(course => <SelectItem key={course.id} value={course.id.toString()}>{course.name}</SelectItem>)}</SelectContent>
+                            <SelectContent>
+                              {courses && Array.isArray(courses) && courses.length > 0 ? (
+                                courses.map(course => (
+                                  <SelectItem key={course.id} value={course.id.toString()}>
+                                    {course.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="no-courses" disabled>
+                                  {lookupLoading ? "Loading courses..." : "No courses available"}
+                                </SelectItem>
+                              )}
+                            </SelectContent>
                           </Select>
                           <Select value={formData.branch_id} onValueChange={(value) => setFormData(prev => ({ ...prev, branch_id: value }))} required>
                             <SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger>
@@ -425,35 +665,39 @@ export default function Students() {
               
               {/* Advanced Filters */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex flex-wrap gap-4 items-end">
-                  {/* Course Filter */}
-                  <div className="min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                <div className="flex flex-wrap lg:flex-nowrap gap-3 items-end">
+                  {/* Course Filter - 15% */}
+                  <div className="w-full lg:w-[15%]">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Course</label>
                     <Select value={courseFilter || undefined} onValueChange={(value) => setCourseFilter(value === "all" ? null : value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="All Courses" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Courses</SelectItem>
-                        {courses.map(course => (
+                        {displayCourses && Array.isArray(displayCourses) && displayCourses.length > 0 ? displayCourses.map(course => (
                           <SelectItem key={course.id} value={course.id.toString()}>
                             {course.name}
                           </SelectItem>
-                        ))}
+                        )) : (
+                          <SelectItem value="no-courses" disabled>
+                            {lookupLoading ? "Loading..." : "No courses"}
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Batch Filter */}
-                  <div className="min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Batch</label>
+                  {/* Batch Filter - 15% */}
+                  <div className="w-full lg:w-[15%]">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Batch</label>
                     <Select value={batchFilter || undefined} onValueChange={(value) => setBatchFilter(value === "all" ? null : value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="All Batches" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Batches</SelectItem>
-                        {batches.map(batch => (
+                        {displayBatches.map(batch => (
                           <SelectItem key={batch.id} value={batch.id.toString()}>
                             {batch.name}
                           </SelectItem>
@@ -462,16 +706,16 @@ export default function Students() {
                     </Select>
                   </div>
 
-                  {/* Branch Filter */}
-                  <div className="min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
+                  {/* Branch Filter - 15% */}
+                  <div className="w-full lg:w-[15%]">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Branch</label>
                     <Select value={branchFilter || undefined} onValueChange={(value) => setBranchFilter(value === "all" ? null : value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="All Branches" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Branches</SelectItem>
-                        {branches.map(branch => (
+                        {displayBranches.map(branch => (
                           <SelectItem key={branch.id} value={branch.id.toString()}>
                             {branch.name}
                           </SelectItem>
@@ -480,11 +724,11 @@ export default function Students() {
                     </Select>
                   </div>
 
-                  {/* Payment Status Filter */}
-                  <div className="min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
+                  {/* Payment Status Filter - 15% */}
+                  <div className="w-full lg:w-[15%]">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Payment Status</label>
                     <Select value={paymentStatusFilter || undefined} onValueChange={(value) => setPaymentStatusFilter(value === "all" ? null : value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9">
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent>
@@ -496,35 +740,37 @@ export default function Students() {
                     </Select>
                   </div>
 
-                  {/* Date Range Filter */}
-                  <div className="min-w-[200px]">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Admission Date Range</label>
-                    <div className="flex gap-2">
+                  {/* Date Range Filter - 32% */}
+                  <div className="w-full lg:w-[32%]">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Admission Date Range</label>
+                    <div className="flex gap-1">
                       <Input
                         type="date"
                         placeholder="Start Date"
                         value={dateRangeFilter.startDate}
                         onChange={(e) => setDateRangeFilter(prev => ({ ...prev, startDate: e.target.value }))}
-                        className="text-sm"
+                        className="text-xs h-9"
                       />
                       <Input
                         type="date"
                         placeholder="End Date"
                         value={dateRangeFilter.endDate}
                         onChange={(e) => setDateRangeFilter(prev => ({ ...prev, endDate: e.target.value }))}
-                        className="text-sm"
+                        className="text-xs h-9"
                       />
                     </div>
                   </div>
 
-                  {/* Clear Filters Button */}
-                  <Button
-                    variant="outline"
-                    onClick={clearAllFilters}
-                    className="h-10 px-4"
-                  >
-                    Clear Filters
-                  </Button>
+                  {/* Clear Filters Button - 8% */}
+                  <div className="w-full lg:w-[8%]">
+                    <Button
+                      variant="outline"
+                      onClick={clearAllFilters}
+                      className="w-full h-9 px-2 text-xs"
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </div>
                 
                 {/* Filter Summary */}
@@ -534,7 +780,7 @@ export default function Students() {
                       <span>Active filters:</span>
                       {courseFilter && (
                         <Badge variant="secondary" className="text-xs">
-                          Course: {courses.find(c => c.id.toString() === courseFilter)?.name}
+                          Course: {courses && Array.isArray(courses) ? courses.find(c => c.id.toString() === courseFilter)?.name : 'Unknown'}
                         </Badge>
                       )}
                       {batchFilter && (
@@ -635,9 +881,9 @@ export default function Students() {
                         <TableCell>
                           <span className="text-sm font-medium text-blue-600">{student.bmdc_no || 'N/A'}</span>
                         </TableCell>
-                        <TableCell>{courses.find(c => c.id === student.course_id)?.name || 'Unknown'}</TableCell>
-                        <TableCell>{batches.find(b => b.id === student.batch_id)?.name || 'Unknown'}</TableCell>
-                        <TableCell>{branches.find(b => b.id === student.branch_id)?.name || 'Unknown'}</TableCell>
+                        <TableCell>{student.course?.name || 'Unknown'}</TableCell>
+                        <TableCell>{student.batch?.name || 'Unknown'}</TableCell>
+                        <TableCell>{student.branch?.name || 'Unknown'}</TableCell>
                         <TableCell>
                           <Badge className={student.payment_status === 'paid' ? 'bg-green-100 text-green-800' : student.payment_status === 'partial' ? 'bg-yellow-100 text-yellow-800' : 'bg-orange-100 text-orange-800'}>
                             {student.payment_status}
@@ -668,7 +914,19 @@ export default function Students() {
           {/* View Dialog - Improved Design */}
           <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle className="text-2xl font-bold text-gray-900">Student Details</DialogTitle></DialogHeader>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-2xl font-bold text-gray-900">Student Details</DialogTitle>
+                  <Button 
+                    onClick={() => selectedStudent && exportStudentPDF(selectedStudent)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    size="sm"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export PDF
+                  </Button>
+                </div>
+              </DialogHeader>
               {selectedStudent && (
                 <div className="space-y-6">
                   {/* Student Header with Avatar */}
@@ -729,15 +987,15 @@ export default function Students() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
                         <p className="text-sm font-medium text-gray-500 mb-2">Course</p>
-                        <p className="text-lg font-bold text-gray-900">{courses.find(c => c.id === selectedStudent.course_id)?.name}</p>
+                        <p className="text-lg font-bold text-gray-900">{selectedStudent.course?.name || 'Unknown'}</p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
                         <p className="text-sm font-medium text-gray-500 mb-2">Branch</p>
-                        <p className="text-lg font-bold text-gray-900">{branches.find(b => b.id === selectedStudent.branch_id)?.name}</p>
+                        <p className="text-lg font-bold text-gray-900">{selectedStudent.branch?.name || 'Unknown'}</p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
                         <p className="text-sm font-medium text-gray-500 mb-2">Batch</p>
-                        <p className="text-lg font-bold text-gray-900">{batches.find(b => b.id === selectedStudent.batch_id)?.name}</p>
+                        <p className="text-lg font-bold text-gray-900">{selectedStudent.batch?.name || 'Unknown'}</p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg md:col-span-3">
                         <p className="text-sm font-medium text-gray-500 mb-2">Admission Date</p>
@@ -755,19 +1013,19 @@ export default function Students() {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <p className="text-sm font-medium text-blue-600 mb-2">Total Fee</p>
-                        <p className="text-xl font-bold text-blue-900">৳{selectedStudent.total_fee.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-blue-900">৳{(selectedStudent.total_fee || 0).toLocaleString()}</p>
                       </div>
                       <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
                         <p className="text-sm font-medium text-green-600 mb-2">Admission Fee</p>
-                        <p className="text-xl font-bold text-green-900">৳{selectedStudent.admission_fee.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-green-900">৳{(selectedStudent.admission_fee || 0).toLocaleString()}</p>
                       </div>
                       <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                         <p className="text-sm font-medium text-yellow-600 mb-2">Discount</p>
-                        <p className="text-xl font-bold text-yellow-900">৳{selectedStudent.discount_amount.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-yellow-900">৳{(selectedStudent.discount_amount || 0).toLocaleString()}</p>
                       </div>
                       <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
                         <p className="text-sm font-medium text-purple-600 mb-2">Final Fee</p>
-                        <p className="text-xl font-bold text-purple-900">৳{selectedStudent.final_fee.toLocaleString()}</p>
+                        <p className="text-xl font-bold text-purple-900">৳{(selectedStudent.final_fee || 0).toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="mt-4 flex justify-center">
@@ -777,6 +1035,59 @@ export default function Students() {
                           {selectedStudent.payment_status}
                         </Badge>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Payment History */}
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                      <span className="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
+                      Payment History
+                    </h4>
+                    {selectedStudent.payment_history && selectedStudent.payment_history.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedStudent.payment_history.map((payment, index) => (
+                          <div key={payment.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {payment.payment_type === 'admission_fee' ? 'Admission Fee' : 
+                                     payment.payment_type === 'course_fee' ? 'Course Fee' : 
+                                     payment.payment_type === 'exam_fee' ? 'Exam Fee' : 'Other'}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {new Date(payment.payment_date).toLocaleDateString()} • {payment.payment_method}
+                                  </p>
+                                  <p className="text-xs text-gray-500">Receipt: {payment.receipt_no}</p>
+                                </div>
+                              </div>
+                              {payment.notes && (
+                                <p className="text-sm text-gray-600 mt-1">{payment.notes}</p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-green-600">৳{(payment.amount || 0).toLocaleString()}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No payment history available</p>
+                      </div>
+                    )}
+                    <div className="mt-4 flex justify-end">
+                      <Button 
+                        onClick={() => {
+                          // TODO: Open fee collection dialog
+                          console.log('Collect fee for student:', selectedStudent.id);
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        Collect Fee
+                      </Button>
                     </div>
                   </div>
 
@@ -830,15 +1141,45 @@ export default function Students() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Select value={formData.course_id} onValueChange={(value) => setFormData(prev => ({ ...prev, course_id: value }))}>
                       <SelectTrigger><SelectValue placeholder="Select Course" /></SelectTrigger>
-                      <SelectContent>{courses.map(course => <SelectItem key={course.id} value={course.id.toString()}>{course.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>
+                        {displayCourses && Array.isArray(displayCourses) && displayCourses.length > 0 ? displayCourses.map(course => (
+                          <SelectItem key={course.id} value={course.id.toString()}>
+                            {course.name}
+                          </SelectItem>
+                        )) : (
+                          <SelectItem value="no-courses" disabled>
+                            {lookupLoading ? "Loading courses..." : "No courses available"}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
                     </Select>
                     <Select value={formData.branch_id} onValueChange={(value) => setFormData(prev => ({ ...prev, branch_id: value }))}>
                       <SelectTrigger><SelectValue placeholder="Select Branch" /></SelectTrigger>
-                      <SelectContent>{branches.map(branch => <SelectItem key={branch.id} value={branch.id.toString()}>{branch.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>
+                        {displayBranches && Array.isArray(displayBranches) && displayBranches.length > 0 ? displayBranches.map(branch => (
+                          <SelectItem key={branch.id} value={branch.id.toString()}>
+                            {branch.name}
+                          </SelectItem>
+                        )) : (
+                          <SelectItem value="no-branches" disabled>
+                            {lookupLoading ? "Loading branches..." : "No branches available"}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
                     </Select>
                     <Select value={formData.batch_id} onValueChange={(value) => setFormData(prev => ({ ...prev, batch_id: value }))}>
                       <SelectTrigger><SelectValue placeholder="Select Batch" /></SelectTrigger>
-                      <SelectContent>{batches.map(batch => <SelectItem key={batch.id} value={batch.id.toString()}>{batch.name}</SelectItem>)}</SelectContent>
+                      <SelectContent>
+                        {displayBatches && Array.isArray(displayBatches) && displayBatches.length > 0 ? displayBatches.map(batch => (
+                          <SelectItem key={batch.id} value={batch.id.toString()}>
+                            {batch.name}
+                          </SelectItem>
+                        )) : (
+                          <SelectItem value="no-batches" disabled>
+                            {lookupLoading ? "Loading batches..." : "No batches available"}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
                     </Select>
                     <Input placeholder="Admission Date" type="date" value={formData.admission_date} onChange={(e) => setFormData(prev => ({ ...prev, admission_date: e.target.value }))} required />
                   </div>

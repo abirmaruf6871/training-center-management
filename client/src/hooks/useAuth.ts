@@ -2,21 +2,32 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { API_ENDPOINTS, getApiUrl } from "@/config/api";
 import { apiClient } from "@/lib/apiClient";
+import { apiService } from "@/lib/api";
 
 export function useAuth() {
-  const [localUser, setLocalUser] = useState(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('auth_token'));
+  const [localUser, setLocalUser] = useState(() => {
+    // Initialize user from localStorage if available
+    const storedUser = localStorage.getItem('auth_user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [token, setToken] = useState<string | null>(() => {
+    return localStorage.getItem('auth_token');
+  });
   const queryClient = useQueryClient();
+  
+  // Debug logging
+  console.log('useAuth hook - token:', token, 'hasToken:', !!token, 'localUser:', localUser);
   
   const { data: user, isLoading } = useQuery({
     queryKey: [API_ENDPOINTS.AUTH.USER],
     queryFn: async () => {
-      const response = await apiClient.get(getApiUrl(API_ENDPOINTS.AUTH.USER));
-      if (!response.ok) throw new Error('Failed to fetch user');
-      return response.json();
+      console.log('useAuth queryFn called - this should not happen without token');
+      return await apiService.getUser();
     },
     retry: false,
-    enabled: !!token, // Only run query if we have a token
+    enabled: false, // Disable completely for now to prevent timeout issues
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime in newer versions)
   });
 
   const login = (userData: any, authToken: string) => {
@@ -24,6 +35,7 @@ export function useAuth() {
     setLocalUser(userData);
     setToken(authToken);
     localStorage.setItem('auth_token', authToken);
+    localStorage.setItem('auth_user', JSON.stringify(userData));
     // Invalidate the auth query to refresh
     queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.AUTH.USER] });
     console.log('Login state updated, user should be authenticated now');
@@ -39,6 +51,7 @@ export function useAuth() {
       setLocalUser(null);
       setToken(null);
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
       // Clear query cache
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.AUTH.USER] });
       // Redirect to login page
@@ -49,6 +62,7 @@ export function useAuth() {
       setLocalUser(null);
       setToken(null);
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
       queryClient.invalidateQueries({ queryKey: [API_ENDPOINTS.AUTH.USER] });
       window.location.href = "/";
     }
@@ -59,8 +73,8 @@ export function useAuth() {
 
   return {
     user: currentUser,
-    isLoading,
-    isAuthenticated: !!currentUser,
+    isLoading: false, // Set to false since we're not making API calls
+    isAuthenticated: !!currentUser || !!token, // Check both user and token
     token,
     login,
     logout,

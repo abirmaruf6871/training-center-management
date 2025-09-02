@@ -100,3 +100,4 @@ class BatchSeeder extends Seeder
     }
 }
 
+
